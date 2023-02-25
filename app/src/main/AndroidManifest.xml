@@ -24,13 +24,19 @@
         <activity
             android:name=".MainActivitySample"
             android:exported="false" />
-
         <activity
             android:name=".InternalStorageActivity"
             android:exported="false" />
         <activity
             android:name=".ExternalStorageActivity"
             android:exported="false" />
+        <activity
+            android:name=".SharedPreferencesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EncryptedSharedPreferencesActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

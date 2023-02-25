@@ -1,8 +1,5 @@
 package de.androidcrypto.aaaandroidexamples;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,9 +10,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
-    private final String TAG = "MainAct";
+public class SharedPreferencesActivity extends AppCompatActivity {
+
+    private final String TAG = "SharedPreferencesAct";
 
     Button btn1, btn2, btn3, btn4, btn5, btn6, btn7;
     TextView tv1;
@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_shared_preferences);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
@@ -42,44 +42,42 @@ public class MainActivity extends AppCompatActivity {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn1");
-
+                Log.i(TAG, "btn1 back to main menu");
+                Intent intent = new Intent(SharedPreferencesActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
 
         btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn2 internal storage");
-                Intent intent = new Intent(MainActivity.this, InternalStorageActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn2");
+
             }
         });
 
         btn3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn3 external storage");
-                Intent intent = new Intent(MainActivity.this, ExternalStorageActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn3");
+
             }
         });
 
         btn4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn4 shared preferences");
-                Intent intent = new Intent(MainActivity.this, SharedPreferencesActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn4");
+
             }
         });
 
         btn5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn5 encrypted shared preferences");
-                Intent intent = new Intent(MainActivity.this, EncryptedSharedPreferencesActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn5");
+
             }
         });
     }
