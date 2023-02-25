@@ -82,7 +82,6 @@ public class InternalStorageActivity extends AppCompatActivity {
                     Toast.makeText(InternalStorageActivity.this, "no filename provided", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                System.out.println("filename: " + completeFilename + " numberOfExtensions: " + getNumberOfExtensions(completeFilename));
                 if (getNumberOfExtensions(completeFilename) != 1) {
                     Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
                     return;
@@ -117,6 +116,67 @@ public class InternalStorageActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.i(TAG, "btn5 read binary file");
 
+            }
+        });
+
+        btn6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn 6 file exists");
+                etLog.setText("start fileExists");
+                String completeFilename = getSafeFilename(etFilename.getText().toString());
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                if (TextUtils.isEmpty(completeFilename)) {
+                    Toast.makeText(InternalStorageActivity.this, "no filename provided", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (getNumberOfExtensions(completeFilename) != 1) {
+                    Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String filenameWithSubfolder = "";
+                if (TextUtils.isEmpty(subfolder)) {
+                    filenameWithSubfolder = completeFilename;
+                } else {
+                    filenameWithSubfolder = subfolder + File.separator + completeFilename;
+                }
+                boolean fileExists = fileExistsInInternalStorage(filenameWithSubfolder);
+                String message = "file " + filenameWithSubfolder + " is existing: ";
+                etLog.setText(message + fileExists);
+            }
+        });
+
+        btn7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn 7 delete file");
+                etLog.setText("start delete file");
+                String completeFilename = getSafeFilename(etFilename.getText().toString());
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                if (TextUtils.isEmpty(completeFilename)) {
+                    Toast.makeText(InternalStorageActivity.this, "no filename provided", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (getNumberOfExtensions(completeFilename) != 1) {
+                    Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String filenameWithSubfolder = "";
+                if (TextUtils.isEmpty(subfolder)) {
+                    filenameWithSubfolder = completeFilename;
+                } else {
+                    filenameWithSubfolder = subfolder + File.separator + completeFilename;
+                }
+                // delete file only if file is existing
+                boolean fileExists = fileExistsInInternalStorage(filenameWithSubfolder);
+                if (!fileExists) {
+                    String message = "file " + filenameWithSubfolder + " is not existing, deletion not possible";
+                    etLog.setText(message);
+                    return;
+                }
+                boolean deletionSuccess = fileDeleteInInternalStorage(filenameWithSubfolder);
+                String message = "file " + filenameWithSubfolder + " was deleted: ";
+                etLog.setText(message + deletionSuccess);
             }
         });
     }
@@ -175,8 +235,11 @@ public class InternalStorageActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(subfolder)) {
             file = new File(getFilesDir(), filename);
         } else {
-            File subfolderFile = new File(subfolder, filename);
-            file = new File(getFilesDir(), subfolderFile.getAbsolutePath());
+            File subfolderFile = new File(getFilesDir(), subfolder);
+            if (!subfolderFile.exists()) {
+                subfolderFile.mkdirs();
+            }
+            file = new File(subfolderFile, filename);
         }
         FileWriter writer = null;
         try {
@@ -189,6 +252,26 @@ public class InternalStorageActivity extends AppCompatActivity {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * checks if a file in internal storage is existing
+     * @param completeFilename with all subfolders
+     * @return true if file exists and false if not
+     */
+    private boolean fileExistsInInternalStorage(String completeFilename) {
+        File file = new File(getFilesDir(), completeFilename);
+        return file.exists();
+    }
+
+    /**
+     * deletes a file in internal storage
+     * @param completeFilename with all subfolders
+     * @return true if deletion was successful
+     */
+    private boolean fileDeleteInInternalStorage(String completeFilename) {
+        File file = new File(getFilesDir(), completeFilename);
+        return file.delete();
     }
 
 

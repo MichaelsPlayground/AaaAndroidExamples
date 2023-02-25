@@ -201,7 +201,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginRight="8dp"
                     android:layout_weight="1"
-                    android:text="write binary fikle" />
+                    android:text="write binary file" />
 
                 <Button
                     android:id="@+id/btn5"
@@ -232,7 +232,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginRight="8dp"
                     android:layout_weight="1"
-                    android:text="Button 6" />
+                    android:text="file exists" />
 
                 <Button
                     android:id="@+id/btn7"
@@ -240,7 +240,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
                     android:layout_weight="1"
-                    android:text="Button 7" />
+                    android:text="delete file" />
             </LinearLayout>
 
             <com.google.android.material.divider.MaterialDivider

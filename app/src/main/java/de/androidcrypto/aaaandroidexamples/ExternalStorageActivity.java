@@ -80,6 +80,22 @@ public class ExternalStorageActivity extends AppCompatActivity {
 
             }
         });
+
+        btn6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn 6");
+
+            }
+        });
+
+        btn7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn 7");
+
+            }
+        });
     }
 
 
