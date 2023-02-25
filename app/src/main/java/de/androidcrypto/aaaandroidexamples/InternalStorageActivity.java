@@ -16,8 +16,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -86,9 +88,6 @@ public class InternalStorageActivity extends AppCompatActivity {
                     Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                //String[] filenameParts = splitFilename(completeFilename);
-                //String fileName = getSafeFilename(filenameParts[0]);
-                //String fileExtension = getSafeFilename(filenameParts[1]);
                 String message = "writing " + completeFilename + " is success: ";
                 boolean writeSuccess = writeTextToInternalStorage(completeFilename, subfolder, data);
                 etLog.setText(message + writeSuccess);
@@ -99,7 +98,28 @@ public class InternalStorageActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "btn3 read text file");
-
+                etData.setText("");
+                String completeFilename = getSafeFilename(etFilename.getText().toString());
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                if (TextUtils.isEmpty(completeFilename)) {
+                    Toast.makeText(InternalStorageActivity.this, "no filename provided", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (getNumberOfExtensions(completeFilename) != 1) {
+                    Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String readData = readFileFromInternalStorage(completeFilename, subfolder);
+                if (TextUtils.isEmpty(readData)) {
+                    etData.setText("no data to read or file is not existing");
+                    String message = "reading " + completeFilename + " is success: false";
+                    etLog.setText(message);
+                    Toast.makeText(InternalStorageActivity.this, "no data to read or file is not existing", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                etData.setText(readData);
+                String message = "reading " + completeFilename + " is success";
+                etLog.setText(message);
             }
         });
 
@@ -161,12 +181,15 @@ public class InternalStorageActivity extends AppCompatActivity {
                     Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                String filenameWithSubfolder = concatenateFilenameWithSubfolder(completeFilename, subfolder);
+                /*
                 String filenameWithSubfolder = "";
                 if (TextUtils.isEmpty(subfolder)) {
                     filenameWithSubfolder = completeFilename;
                 } else {
                     filenameWithSubfolder = subfolder + File.separator + completeFilename;
-                }
+                }**/
                 // delete file only if file is existing
                 boolean fileExists = fileExistsInInternalStorage(filenameWithSubfolder);
                 if (!fileExists) {
@@ -182,6 +205,25 @@ public class InternalStorageActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * concatenates the filename with a subfolder
+     * @param filename
+     * @param subfolder
+     * @return a String subfolder | File.separator | filename
+     */
+    public String concatenateFilenameWithSubfolder(@NonNull String filename, String subfolder) {
+        if (TextUtils.isEmpty(subfolder)) {
+            return filename;
+        } else {
+            return subfolder + File.separator + filename;
+        }
+    }
+
+    /**
+     * splits a complete filename in the filename [0] and extension [1]
+     * @param filename with extension
+     * @return a String array with filename [0] and extension [1]
+     */
     private String[] splitFilename(@NonNull String filename) {
         return filename.split(".");
     }
@@ -203,8 +245,6 @@ public class InternalStorageActivity extends AppCompatActivity {
         return count;
     }
     private int getNumberOfExtensionsOld(@NonNull String filename) {
-
-
         String[] parts = filename.split(".");
         System.out.println("parts: " + parts.length);
         return parts.length - 1;
@@ -220,6 +260,41 @@ public class InternalStorageActivity extends AppCompatActivity {
         filename = filename.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
         int end = Math.min(filename.length(),MAX_LENGTH);
         return filename.substring(0,end);
+    }
+
+    /**
+     * read a file from internal storage and return the content as UTF-8 encoded string
+     * @param filename
+     * @param subfolder
+     * @return the content as String
+     */
+    public String readFileFromInternalStorage(@NonNull String filename, String subfolder) {
+        File file;
+        if (TextUtils.isEmpty(subfolder)) {
+            file = new File(getFilesDir(), filename);
+        } else {
+            File subfolderFile = new File(getFilesDir(), subfolder);
+            if (!subfolderFile.exists()) {
+                subfolderFile.mkdirs();
+            }
+            file = new File(subfolderFile, filename);
+        }
+        String completeFilename = concatenateFilenameWithSubfolder(filename, subfolder);
+        if (!fileExistsInInternalStorage(completeFilename)) {
+            return "";
+        }
+        int length = (int) file.length();
+        byte[] bytes = new byte[length];
+        FileInputStream in = null;
+        try {
+            in = new FileInputStream(file);
+            in.read(bytes);
+            in.close();
+            return new String(bytes, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     /**
