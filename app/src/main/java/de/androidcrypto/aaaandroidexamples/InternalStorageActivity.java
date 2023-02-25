@@ -2,16 +2,25 @@ package de.androidcrypto.aaaandroidexamples;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class InternalStorageActivity extends AppCompatActivity {
 
@@ -19,7 +28,9 @@ public class InternalStorageActivity extends AppCompatActivity {
 
     Button btn1, btn2, btn3, btn4, btn5, btn6, btn7;
     TextView tv1;
-    EditText et1;
+    com.google.android.material.textfield.TextInputEditText etData, etFilename, etSubfolder, etLog;
+
+    String uniqueId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +48,13 @@ public class InternalStorageActivity extends AppCompatActivity {
         btn6 = findViewById(R.id.btn6);
         btn7 = findViewById(R.id.btn7);
         tv1 = findViewById(R.id.tv1);
-        et1 = findViewById(R.id.et1);
+        etData = findViewById(R.id.etData);
+        etFilename = findViewById(R.id.etFilename);
+        etSubfolder = findViewById(R.id.etSubfolder);
+        etLog = findViewById(R.id.etLog);
+
+        uniqueId = UUID.randomUUID().toString();
+        etData.setText(uniqueId);
 
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,7 +70,29 @@ public class InternalStorageActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "btn2 write text file");
-
+                etLog.setText("start to write");
+                String data = etData.getText().toString();
+                String completeFilename = getSafeFilename(etFilename.getText().toString());
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                if (TextUtils.isEmpty(data)) {
+                    Toast.makeText(InternalStorageActivity.this, "no data to write", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (TextUtils.isEmpty(completeFilename)) {
+                    Toast.makeText(InternalStorageActivity.this, "no filename provided", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                System.out.println("filename: " + completeFilename + " numberOfExtensions: " + getNumberOfExtensions(completeFilename));
+                if (getNumberOfExtensions(completeFilename) != 1) {
+                    Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                //String[] filenameParts = splitFilename(completeFilename);
+                //String fileName = getSafeFilename(filenameParts[0]);
+                //String fileExtension = getSafeFilename(filenameParts[1]);
+                String message = "writing " + completeFilename + " is success: ";
+                boolean writeSuccess = writeTextToInternalStorage(completeFilename, subfolder, data);
+                etLog.setText(message + writeSuccess);
             }
         });
 
@@ -81,6 +120,78 @@ public class InternalStorageActivity extends AppCompatActivity {
             }
         });
     }
+
+
+    private String[] splitFilename(@NonNull String filename) {
+        return filename.split(".");
+    }
+
+    /**
+     * counts the number of file extensions (testing on '.' in the filename)
+     * @param filename
+     * @return number of extensions
+     */
+    //public int countChar(String str, char c)
+    private int getNumberOfExtensions(@NonNull String filename)
+    {
+        char c = '.';
+        int count = 0;
+        for(int i=0; i < filename.length(); i++)
+        {    if(filename.charAt(i) == c)
+            count++;
+        }
+        return count;
+    }
+    private int getNumberOfExtensionsOld(@NonNull String filename) {
+
+
+        String[] parts = filename.split(".");
+        System.out.println("parts: " + parts.length);
+        return parts.length - 1;
+    }
+
+    /**
+     * converts a filename to a Android safe filename
+     * @param filename WITHOUT extension
+     * @return new filename
+     */
+    private String getSafeFilename(@NonNull String filename) {
+        final int MAX_LENGTH = 127;
+        filename = filename.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+        int end = Math.min(filename.length(),MAX_LENGTH);
+        return filename.substring(0,end);
+    }
+
+    /**
+     * writes a string to the filename in internal storage, If a subfolder is provided the file is created in the subfolder
+     * if the file is existing it will be overwritten
+     * @param filename
+     * @param subfolder
+     * @param data
+     * @return true if writing is successful and false if not
+     */
+    private boolean writeTextToInternalStorage(@NonNull String filename, String subfolder, @NonNull String data){
+        File file;
+        if (TextUtils.isEmpty(subfolder)) {
+            file = new File(getFilesDir(), filename);
+        } else {
+            File subfolderFile = new File(subfolder, filename);
+            file = new File(getFilesDir(), subfolderFile.getAbsolutePath());
+        }
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(file);
+            writer.append(data);
+            writer.flush();
+            writer.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 
 
     /**
