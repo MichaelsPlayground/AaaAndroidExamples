@@ -15,7 +15,7 @@ import androidx.appcompat.widget.Toolbar;
 
 public class InternalStorageActivity extends AppCompatActivity {
 
-    private final String TAG = "ExternalStorageAct";
+    private final String TAG = "InternalStorageAct";
 
     Button btn1, btn2, btn3, btn4, btn5, btn6, btn7;
     TextView tv1;
@@ -52,7 +52,7 @@ public class InternalStorageActivity extends AppCompatActivity {
         btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn2");
+                Log.i(TAG, "btn2 write text file");
 
             }
         });
@@ -60,7 +60,7 @@ public class InternalStorageActivity extends AppCompatActivity {
         btn3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn3");
+                Log.i(TAG, "btn3 read text file");
 
             }
         });
@@ -68,7 +68,7 @@ public class InternalStorageActivity extends AppCompatActivity {
         btn4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn4");
+                Log.i(TAG, "btn4 write binary file");
 
             }
         });
@@ -76,7 +76,7 @@ public class InternalStorageActivity extends AppCompatActivity {
         btn5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn5");
+                Log.i(TAG, "btn5 read binary file");
 
             }
         });
