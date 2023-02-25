@@ -46,7 +46,11 @@
                 android:id="@+id/tv1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TextView 1" />
+                android:layout_marginTop="8dp"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                android:background="@drawable/round_rect_shape"
+                android:text="we do NOT need any permissions for accessing the internal (= 'app') storage." />
 
             <EditText
                 android:id="@+id/et1"
