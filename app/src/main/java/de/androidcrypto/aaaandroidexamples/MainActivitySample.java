@@ -1,8 +1,5 @@
 package de.androidcrypto.aaaandroidexamples;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,7 +10,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
+public class MainActivitySample extends AppCompatActivity {
 
     private final String TAG = "MainAct";
 
@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main_sample);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
@@ -42,26 +42,26 @@ public class MainActivity extends AppCompatActivity {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn1");
-
+                Log.i(TAG, "btn1 back to main menu");
+                Intent intent = new Intent(MainActivitySample.this, MainActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
 
         btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn2 internal storage");
-                Intent intent = new Intent(MainActivity.this, InternalStorageActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn2");
+
             }
         });
 
         btn3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn3 external storage");
-                Intent intent = new Intent(MainActivity.this, ExternalStorageActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn3");
+
             }
         });
 

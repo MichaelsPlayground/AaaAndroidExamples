@@ -2,7 +2,8 @@
 
 This is a collection of my examples for Android (Java) in these categories:
 
-- file management
+- internal storage management
+- external storage management
 - image management
 - encryption
 - shared preferences

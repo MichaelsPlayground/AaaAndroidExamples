@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".InternalStorageActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/main_toolbar"
@@ -21,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="Main menu"
+        android:text="Internal storage menu"
         android:textAlignment="center"
         android:textSize="20sp"
         android:textStyle="bold" />
@@ -40,7 +40,7 @@
                 android:id="@+id/btn1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button 1" />
+                android:text="back to Main Menu" />
 
             <TextView
                 android:id="@+id/tv1"
@@ -76,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginRight="8dp"
                     android:layout_weight="1"
-                    android:text="internal storage" />
+                    android:text="Button 2" />
 
                 <Button
                     android:id="@+id/btn3"
@@ -84,7 +84,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
                     android:layout_weight="1"
-                    android:text="external storage" />
+                    android:text="Button 3" />
             </LinearLayout>
 
             <com.google.android.material.divider.MaterialDivider
