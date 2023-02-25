@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +29,7 @@ public class InternalStorageActivity extends AppCompatActivity {
 
     private final String TAG = "InternalStorageAct";
 
-    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7;
+    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9;
     TextView tv1;
     com.google.android.material.textfield.TextInputEditText etData, etFilename, etSubfolder, etLog;
 
@@ -49,6 +50,8 @@ public class InternalStorageActivity extends AppCompatActivity {
         btn5 = findViewById(R.id.btn5);
         btn6 = findViewById(R.id.btn6);
         btn7 = findViewById(R.id.btn7);
+        btn8 = findViewById(R.id.btn8);
+        btn9 = findViewById(R.id.btn9);
         tv1 = findViewById(R.id.tv1);
         etData = findViewById(R.id.etData);
         etFilename = findViewById(R.id.etFilename);
@@ -183,13 +186,6 @@ public class InternalStorageActivity extends AppCompatActivity {
                 }
 
                 String filenameWithSubfolder = concatenateFilenameWithSubfolder(completeFilename, subfolder);
-                /*
-                String filenameWithSubfolder = "";
-                if (TextUtils.isEmpty(subfolder)) {
-                    filenameWithSubfolder = completeFilename;
-                } else {
-                    filenameWithSubfolder = subfolder + File.separator + completeFilename;
-                }**/
                 // delete file only if file is existing
                 boolean fileExists = fileExistsInInternalStorage(filenameWithSubfolder);
                 if (!fileExists) {
@@ -200,6 +196,52 @@ public class InternalStorageActivity extends AppCompatActivity {
                 boolean deletionSuccess = fileDeleteInInternalStorage(filenameWithSubfolder);
                 String message = "file " + filenameWithSubfolder + " was deleted: ";
                 etLog.setText(message + deletionSuccess);
+            }
+        });
+
+        btn8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn8 list files");
+                etLog.setText("start list files");
+                etData.setText("");
+                etFilename.setText("");
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                ArrayList<String> fileList = listFilesInInternalStorage(subfolder);
+                if (fileList.isEmpty()) {
+                    etLog.setText("there are no files in (sub-) folder");
+                    return;
+                }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < fileList.size(); i++) {
+                    sb.append(fileList.get(i)).append("\n");
+                }
+                etFilename.setText("");
+                etData.setText("found " + fileList.size() + " files:\n" + sb.toString());
+                etLog.setText("found " + fileList.size() + " files");
+            }
+        });
+
+        btn9.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn9 list folder");
+                etLog.setText("start list folder");
+                etData.setText("");
+                etFilename.setText("");
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                ArrayList<String> folderList = listFolderInInternalStorage(subfolder);
+                if (folderList.isEmpty()) {
+                    etLog.setText("there are no folder in (sub-) folder");
+                    return;
+                }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < folderList.size(); i++) {
+                    sb.append(folderList.get(i)).append("\n");
+                }
+                etFilename.setText("");
+                etData.setText("found " + folderList.size() + " folder:\n" + sb.toString());
+                etLog.setText("found " + folderList.size() + " folder");
             }
         });
     }
@@ -349,7 +391,58 @@ public class InternalStorageActivity extends AppCompatActivity {
         return file.delete();
     }
 
+    /**
+     * list all files in the (sub-) folder of internal storage
+     * @param subfolder
+     * @return ArrayList<String> with filenames
+     */
+    public ArrayList<String> listFilesInInternalStorage( String subfolder) {
+        File file;
+        if (TextUtils.isEmpty(subfolder)) {
+            file = new File(getFilesDir(), "");
+        } else {
+            file = new File(getFilesDir(), subfolder);
+            /*
+            if (!subfolderFile.exists()) {
+                subfolderFile.mkdirs();
+            }
 
+             */
+
+        }
+        File[] files = file.listFiles();
+        if (files == null) return null;
+        ArrayList<String> fileNames = new ArrayList<>();
+        for (File value : files) {
+            if (value.isFile()) {
+                fileNames.add(value.getName());
+            }
+        }
+        return fileNames;
+    }
+
+    /**
+     * list all folder in the (sub-) folder of internal storage
+     * @param subfolder
+     * @return ArrayList<String> with folder names
+     */
+    public ArrayList<String> listFolderInInternalStorage(String subfolder) {
+        File file;
+        if (TextUtils.isEmpty(subfolder)) {
+            file = new File(getFilesDir(), "");
+        } else {
+            file = new File(getFilesDir(), subfolder);
+        }
+        File[] files = file.listFiles();
+        if (files == null) return null;
+        ArrayList<String> folderNames = new ArrayList<>();
+        for (File value : files) {
+            if (!value.isFile()) {
+                folderNames.add(value.getName());
+            }
+        }
+        return folderNames;
+    }
 
 
     /**
