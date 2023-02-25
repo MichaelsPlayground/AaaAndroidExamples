@@ -15,17 +15,31 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+
 public class InternalStorageActivity extends AppCompatActivity {
+
 
     private final String TAG = "InternalStorageAct";
 
@@ -112,7 +126,7 @@ public class InternalStorageActivity extends AppCompatActivity {
                     Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                String readData = readFileFromInternalStorage(completeFilename, subfolder);
+                String readData = readStringFileFromInternalStorage(completeFilename, subfolder);
                 if (TextUtils.isEmpty(readData)) {
                     etData.setText("no data to read or file is not existing");
                     String message = "reading " + completeFilename + " is success: false";
@@ -130,7 +144,26 @@ public class InternalStorageActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "btn4 write binary file");
-
+                etLog.setText("start to write");
+                String dataString = etData.getText().toString();
+                String completeFilename = getSafeFilename(etFilename.getText().toString());
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                if (TextUtils.isEmpty(dataString)) {
+                    Toast.makeText(InternalStorageActivity.this, "no data to write", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (TextUtils.isEmpty(completeFilename)) {
+                    Toast.makeText(InternalStorageActivity.this, "no filename provided", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (getNumberOfExtensions(completeFilename) != 1) {
+                    Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String message = "writing " + completeFilename + " is success: ";
+                byte[] data = dataString.getBytes(StandardCharsets.UTF_8);
+                boolean writeSuccess = writeBinaryDataToInternalStorage(completeFilename, subfolder, data);
+                etLog.setText(message + writeSuccess);
             }
         });
 
@@ -138,7 +171,29 @@ public class InternalStorageActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "btn5 read binary file");
-
+                etLog.setText("start to read");
+                etData.setText("");
+                String completeFilename = getSafeFilename(etFilename.getText().toString());
+                String subfolder = getSafeFilename(etSubfolder.getText().toString());
+                if (TextUtils.isEmpty(completeFilename)) {
+                    Toast.makeText(InternalStorageActivity.this, "no filename provided", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (getNumberOfExtensions(completeFilename) != 1) {
+                    Toast.makeText(InternalStorageActivity.this, "the filename has not 1 extension", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                byte[] readData = readBinaryDataFromInternalStorage(completeFilename, subfolder);
+                if (readData == null) {
+                    etData.setText("no data to read or file is not existing");
+                    String message = "reading " + completeFilename + " is success: false";
+                    etLog.setText(message);
+                    Toast.makeText(InternalStorageActivity.this, "no data to read or file is not existing", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                etData.setText(new String(readData, StandardCharsets.UTF_8));
+                String message = "reading " + completeFilename + " is success";
+                etLog.setText(message);
             }
         });
 
@@ -310,7 +365,7 @@ public class InternalStorageActivity extends AppCompatActivity {
      * @param subfolder
      * @return the content as String
      */
-    public String readFileFromInternalStorage(@NonNull String filename, String subfolder) {
+    public String readStringFileFromInternalStorage(@NonNull String filename, String subfolder) {
         File file;
         if (TextUtils.isEmpty(subfolder)) {
             file = new File(getFilesDir(), filename);
@@ -369,6 +424,78 @@ public class InternalStorageActivity extends AppCompatActivity {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * read a file from internal storage and return the content as byte array
+     * @param filename
+     * @param subfolder
+     * @return the content as String
+     */
+    public byte[] readBinaryDataFromInternalStorage(@NonNull String filename, String subfolder) {
+        File file;
+        if (TextUtils.isEmpty(subfolder)) {
+            file = new File(getFilesDir(), filename);
+        } else {
+            File subfolderFile = new File(getFilesDir(), subfolder);
+            if (!subfolderFile.exists()) {
+                subfolderFile.mkdirs();
+            }
+            file = new File(subfolderFile, filename);
+        }
+        String completeFilename = concatenateFilenameWithSubfolder(filename, subfolder);
+        if (!fileExistsInInternalStorage(completeFilename)) {
+            return null;
+        }
+        int length = (int) file.length();
+        byte[] bytes = new byte[length];
+        FileInputStream in = null;
+        try {
+            in = new FileInputStream(file);
+            in.read(bytes);
+            in.close();
+            return bytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * writes a byte array to the filename in internal storage, If a subfolder is provided the file is created in the subfolder
+     * if the file is existing it will be overwritten
+     * @param filename
+     * @param subfolder
+     * @param data
+     * @return true if writing is successful and false if not
+     */
+    private boolean writeBinaryDataToInternalStorage(@NonNull String filename, String subfolder, @NonNull byte[] data){
+        final int BUFFER_SIZE = 8096;
+        File file;
+        if (TextUtils.isEmpty(subfolder)) {
+            file = new File(getFilesDir(), filename);
+        } else {
+            File subfolderFile = new File(getFilesDir(), subfolder);
+            if (!subfolderFile.exists()) {
+                subfolderFile.mkdirs();
+            }
+            file = new File(subfolderFile, filename);
+        }
+        try (
+                ByteArrayInputStream in = new ByteArrayInputStream(data);
+                FileOutputStream out = new FileOutputStream(file))
+        {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int nread;
+            while ((nread = in.read(buffer)) > 0) {
+                out.write(buffer, 0, nread);
+            }
+            out.flush();
+        } catch (IOException e) {
+            Log.e(TAG, "ERROR on encryption: " + e.getMessage());
+            return false;
+        }
+        return true;
     }
 
     /**
