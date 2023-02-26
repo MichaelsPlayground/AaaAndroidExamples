@@ -82,6 +82,24 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        btn6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn6 NFC");
+                Intent intent = new Intent(MainActivity.this, NfcActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btn7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn7");
+                //Intent intent = new Intent(MainActivity.this, SharedPreferencesActivity.class);
+                //startActivity(intent);
+            }
+        });
     }
 
 

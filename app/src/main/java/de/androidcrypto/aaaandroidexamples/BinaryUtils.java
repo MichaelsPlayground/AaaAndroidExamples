@@ -2,6 +2,8 @@ package de.androidcrypto.aaaandroidexamples;
 
 import android.util.Base64;
 
+import java.util.Arrays;
+
 public class BinaryUtils {
 
     /**
@@ -30,6 +32,16 @@ public class BinaryUtils {
         for (byte b : bytes) result.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
         return result.toString();
     }
+
+    /**
+     * converts a byte array to a decimal value string
+     * @param bytes
+     * @return a string with decimal values
+     */
+    public static String bytesToHexDecimal(byte[] bytes) {
+        return Arrays.toString(bytes);
+    }
+
 
     /**
      * converts a hex encoded string to a byte array

@@ -8,6 +8,23 @@ This is a collection of my examples for Android (Java) in these categories:
 - encryption
 - shared preferences
 - encrypted shared preferences
+- NFC (real device needed)
 - Material edittext
 - Material switch
 
+
+## Permission handling
+
+For some categories we do need permissions (declared in AndroidManifest.xml) and sometimes a 
+runtime granting by the user:
+
+AndroidManifest.xml:
+```plaintext
+...
+    <!-- needed for NFC -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+...    
+    
+```
