@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
+import android.nfc.tech.MifareUltralight;
 import android.nfc.tech.NfcA;
 import android.nfc.tech.NfcV;
 import android.os.Build;
@@ -15,6 +16,7 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -123,6 +125,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         // the next steps depend on the TechList found on the device
         for (int i = 0; i < techList.length; i++) {
             String tech = techList[i];
+            writeToUiAppend(etLog, "");
             switch (tech) {
                 case TechNfcA: {
                         writeToUiAppend(etLog, "*** Tech ***");
@@ -144,6 +147,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechMifareUltralight: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology Mifare Ultralight");
+                    readMifareUltralight(tag);
                     break;
                 }
                 case TechMifareClassic: {
@@ -181,7 +185,13 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             atqa = nfc.getAtqa();
             sak = nfc.getSak();
             timeout = nfc.getTimeout();
-            writeTechParameter();
+            StringBuilder sb = new StringBuilder();
+            sb.append("TechParameter") . append("\n");
+            sb.append("maxTransceiveLength: ") . append(String.valueOf(maxTransceiveLength)).append("\n");
+            if (atqa != null) sb.append("atqa: ") . append(BinaryUtils.bytesToHex(atqa)).append("\n");
+            sb.append("sak: ") . append(String.valueOf(sak)).append("\n");
+            sb.append("timeout: ") . append(String.valueOf(timeout)).append("\n");
+            writeToUiAppend(etLog, sb.toString());
             // try to connect to the tag
             try {
                 nfc.connect();
@@ -194,7 +204,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                             (byte) 0x00  // page address
                     });
                     String responseString = BinaryUtils.bytesToHex(response);
-                    writeToUiAppend(etData, "data for block 00");
+                    writeToUiAppend(etData, "NfcA data for block 00");
                     writeToUiAppend(etData, responseString);
                     nfc.close();
                 }
@@ -203,7 +213,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 //writeToUiToast("Error on connecting to tag: " + e.getMessage());
                 writeToUiAppend(etLog, "can not read block 00 with NfcA technology");
                 //throw new RuntimeException(e);
-                return;
             }
             try {
                 nfc.close();
@@ -222,19 +231,12 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             maxTransceiveLength = nfc.getMaxTransceiveLength();
             dsfId = nfc.getDsfId();
             responseFlags = nfc.getResponseFlags();
-            writeTechParameter();
+            StringBuilder sb = new StringBuilder();
+            sb.append("TechParameter") . append("\n");
+            sb.append("dsfId: ") . append(String.valueOf(dsfId)).append("\n");
+            sb.append("responseFlags: ") . append(String.valueOf(responseFlags)).append("\n");
+            writeToUiAppend(etLog, sb.toString());
         }
-    }
-    private void writeTechParameter() {
-        // todo print only parameters available for the technology
-        StringBuilder sb = new StringBuilder();
-        sb.append("TechParameter") . append("\n");
-        sb.append("maxTransceiveLength: ") . append(String.valueOf(maxTransceiveLength)).append("\n");
-        if (atqa != null) sb.append("atqa: ") . append(BinaryUtils.bytesToHex(atqa)).append("\n");
-        sb.append("sak: ") . append(String.valueOf(sak)).append("\n");
-        sb.append("dsfId: ") . append(String.valueOf(dsfId)).append("\n");
-        sb.append("responseFlags: ") . append(String.valueOf(responseFlags)).append("\n");
-        writeToUiAppend(etLog, sb.toString());
     }
 
     private void clearAllData() {
@@ -244,6 +246,43 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         dsfId = 0;
         responseFlags = 0;
     }
+
+
+    private void readMifareUltralight(Tag tag) {
+        Log.i(TAG, "read a tag with Mifare Ultralight technology");
+        MifareUltralight nfc = null;
+        nfc = MifareUltralight.get(tag);
+        if (nfc != null) {
+            maxTransceiveLength = nfc.getMaxTransceiveLength();
+            int type = nfc.getType();
+            StringBuilder sb = new StringBuilder();
+            sb.append("TechParameter") . append("\n");
+            sb.append("maxTransceiveLength: ") . append(String.valueOf(maxTransceiveLength)).append("\n");
+            sb.append("type: ") . append(String.valueOf(type)).append("\n");
+            writeToUiAppend(etLog, sb.toString());
+
+            try {
+                nfc.connect();
+                if (type == MifareUltralight.TYPE_ULTRALIGHT) {
+
+                }
+                byte[] pageData = nfc.readPages(0);
+                writeToUiAppend(etData, "MiUl page 00: " + BinaryUtils.bytesToHex(pageData));
+
+            } catch (IOException e) {
+                Log.e(TAG, "Error on connecting to tag: " + e.getMessage());
+                //writeToUiToast("Error on connecting to tag: " + e.getMessage());
+                writeToUiAppend(etLog, "can not read block 00 with NfcA technology");
+                //throw new RuntimeException(e);
+            }
+            try {
+                nfc.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
 
     /**
      * section for MifareClassic
@@ -274,8 +313,8 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             }
 
             // Loop through all sectors
-            for (int sector = 0; sector < (nfc.getSectorCount()); ++sector) {
-                boolean authenticated = autheticateSector(nfc, sector);
+            for (int sector = 0; sector < (sectorCount); ++sector) {
+                boolean authenticated = authenticateSector(nfc, sector);
                 if (authenticated) {
                     String result = readBlockData(nfc, sector);
                     writeToUiAppend(etData, "sector " + String.valueOf(sector) + " " + result);
@@ -295,7 +334,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
      * @param sector current sector
      * @return Boolean authenticated? true:false
      */
-    private boolean autheticateSector(MifareClassic mfc, int sector) {
+    private boolean authenticateSector(MifareClassic mfc, int sector) {
 
         boolean authenticated = false;
         Log.i(TAG, "Authenticating Sector: " + sector + " It contains Blocks: " + mfc.getBlockCountInSector(sector));
@@ -305,7 +344,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             if (mfc.authenticateSectorWithKeyA(sector, MifareClassic.KEY_DEFAULT)) {
                 authenticated = true;
                 Log.w(TAG, "Authenticated!!! ");
-                //rawData += ("Authenticated!!! \n");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -317,7 +355,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 if (mfc.authenticateSectorWithKeyB(sector, MifareClassic.KEY_DEFAULT)) {
                     authenticated = true;
                     Log.w(TAG, "Authenticated!!! ");
-                    //rawData += ("Authenticated!!! \n");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -342,7 +379,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             try {
                 // Create a string of bits from block data and fix endianness
                 // http://en.wikipedia.org/wiki/Endianness
-
                 if (sector <= 15 && block < 3) {
                     // Read block data from block index
                     byte[] data = mfc.readBlock(blockIndex);
@@ -350,7 +386,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                         String temp = BinaryUtils.bytesToHex(data);
                         blockvalues += temp;
                         Log.i(TAG, "Block " + blockIndex + " : " + temp);
-                        //rawData += ("Block " + blockIndex + " : " + temp + "\n");
                     }
                 }
             } catch (IOException e) {
@@ -359,7 +394,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         }
         return blockvalues.trim();
     }
-
 
     /**
      * section for activity workflow - important is the disabling of the ReaderMode when activity is pausing
@@ -412,15 +446,23 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
 
     private void writeToUiAppend(TextView textView, String message) {
         runOnUiThread(() -> {
-            String newString = textView.getText().toString() + "\n" + message;
-            textView.setText(newString);
+            if (TextUtils.isEmpty(textView.getText().toString())) {
+                textView.setText(message);
+            } else {
+                String newString = textView.getText().toString() + "\n" + message;
+                textView.setText(newString);
+            }
         });
     }
 
     private void writeToUiAppendReverse(TextView textView, String message) {
         runOnUiThread(() -> {
-            String newString = message + "\n" + textView.getText().toString();
-            textView.setText(newString);
+            if (TextUtils.isEmpty(textView.getText().toString())) {
+                textView.setText(message);
+            } else {
+                String newString = message + "\n" + textView.getText().toString();
+                textView.setText(newString);
+            }
         });
     }
 
