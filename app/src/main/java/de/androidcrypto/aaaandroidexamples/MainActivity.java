@@ -95,9 +95,9 @@ public class MainActivity extends AppCompatActivity {
         btn7.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn7");
-                //Intent intent = new Intent(MainActivity.this, SharedPreferencesActivity.class);
-                //startActivity(intent);
+                Log.i(TAG, "btn7 NFC Passport");
+                Intent intent = new Intent(MainActivity.this, NfcPassportActivity.class);
+                startActivity(intent);
             }
         });
     }

@@ -15,9 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AaaAndroidExamples"
         tools:targetApi="31">
-        <activity
-            android:name=".NfcActivity"
-            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -41,6 +39,12 @@
             android:exported="false" />
         <activity
             android:name=".EncryptedSharedPreferencesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NfcActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NfcPassportActivity"
             android:exported="false" />
     </application>
 
