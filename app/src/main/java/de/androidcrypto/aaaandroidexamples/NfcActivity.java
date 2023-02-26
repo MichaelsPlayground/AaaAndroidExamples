@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.nfc.tech.IsoDep;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.MifareUltralight;
 import android.nfc.tech.NfcA;
@@ -24,6 +25,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
@@ -164,6 +167,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechIsoDep: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology IsoDep");
+                    readIsoDep(tag);
                     break;
                 }
                 default: {
@@ -173,7 +177,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 }
             }
         }
-
     }
 
     private void readNfcA(Tag tag) {
@@ -219,7 +222,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
         }
     }
 
@@ -263,15 +265,26 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
 
             try {
                 nfc.connect();
+                int numberOfPages = 0; // number of pages, each 4 byte long
+                int numberOfPagesRead = 0; // number of pages to read with readPages (=number of pages / 4) as it returns 16 byte
                 if (type == MifareUltralight.TYPE_ULTRALIGHT) {
-
+                    numberOfPages = 16; // 64 bytes complete memory, 48 bytes user memory
+                    numberOfPagesRead = 4;
+                    writeToUiAppend(etLog, "type of card: Mifare Ultralight (memory 64 bytes)");
                 }
-                byte[] pageData = nfc.readPages(0);
-                writeToUiAppend(etData, "MiUl page 00: " + BinaryUtils.bytesToHex(pageData));
+                if (type == MifareUltralight.TYPE_ULTRALIGHT_C) {
+                    numberOfPages = 44; // 192 bytes complete memory, 144 bytes user accessible, 16 bytes password data (not readable)
+                    numberOfPagesRead = 11;
+                    writeToUiAppend(etLog, "type of card: Mifare Ultralight-C (memory 192 bytes)");
+                }
+                for (int i = 0; i < numberOfPagesRead; i++) {
+                    // a readPages returns not 1 page but 4 pages = 16 bytes of data
+                    byte[] pageData = nfc.readPages(i * 4);
+                    writeToUiAppend(etData, "MiUl page " + i + " " + BinaryUtils.bytesToHex(pageData));
+                }
 
             } catch (IOException e) {
                 Log.e(TAG, "Error on connecting to tag: " + e.getMessage());
-                //writeToUiToast("Error on connecting to tag: " + e.getMessage());
                 writeToUiAppend(etLog, "can not read block 00 with NfcA technology");
                 //throw new RuntimeException(e);
             }
@@ -281,6 +294,143 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private void readIsoDep(Tag tag) {
+        Log.i(TAG, "read a tag with IsoDep technology");
+        IsoDep nfc = null;
+        nfc = IsoDep.get(tag);
+        if (nfc != null) {
+            maxTransceiveLength = nfc.getMaxTransceiveLength();
+            int timeout = nfc.getTimeout();
+            byte[] historicalBytes = nfc.getHistoricalBytes(); // on tags based on NfcA it is filled, otherwise null
+            byte[] hiLayerResponse = nfc.getHiLayerResponse(); // on tags based on NfcB it is filled, otherwise null
+            boolean extendedLengthApduSupport = nfc.isExtendedLengthApduSupported();
+            StringBuilder sb = new StringBuilder();
+            sb.append("TechParameter") . append("\n");
+            sb.append("maxTransceiveLength: ") . append(String.valueOf(maxTransceiveLength)).append("\n");
+            sb.append("timeout: ") . append(String.valueOf(timeout)).append("\n");
+            if (historicalBytes != null) sb.append("historicalBytes: ") . append(BinaryUtils.bytesToHex(historicalBytes)).append("\n");
+            if (hiLayerResponse != null) sb.append("hiLayerResponse: ") . append(BinaryUtils.bytesToHex(hiLayerResponse)).append("\n");
+            sb.append("extendedLengthApduSupport: ") . append(String.valueOf(extendedLengthApduSupport)).append("\n");
+            writeToUiAppend(etLog, sb.toString());
+
+            try {
+                nfc.connect();
+                writeToUiAppend(etLog, "try to read a payment card with PSE and PPSE");
+                byte[] PSE = "1PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PSE
+                byte[] PPSE = "2PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PPSE
+                byte[] RESULT_FAILUE = BinaryUtils.hexToBytes("6A82");
+                byte[] command = selectApdu(PSE);
+                byte[] responsePse = nfc.transceive(command);
+                if (responsePse == null) {
+                    writeToUiAppend(etLog, "selectApdu with PSE fails (null)");
+                } else {
+                    if (Arrays.equals(responsePse, RESULT_FAILUE)) {
+                        writeToUiAppend(etLog, "selectApdu with PSE fails (not allowed)");
+                    } else {
+                        writeToUiAppend(etLog, "responsePse length: " + responsePse.length + " data: " + BinaryUtils.bytesToHex(responsePse));
+                        //System.out.println("pse: " + bytesToHex(responsePse));
+                    }
+                }
+                command = selectApdu(PPSE);
+                byte[] responsePpse = nfc.transceive(command);
+                if (responsePpse == null) {
+                    writeToUiAppend(etLog, "selectApdu with PPSE fails (null)");
+                } else {
+                    if (Arrays.equals(responsePpse, RESULT_FAILUE)) {
+                        writeToUiAppend(etLog, "selectApdu with PPSE fails (not allowed)");
+                    } else {
+                        writeToUiAppend(etLog, "responsePpse length: " + responsePpse.length + " data: " + BinaryUtils.bytesToHex(responsePpse));
+                        //System.out.println("pse: " + bytesToHex(responsePse));
+                    }
+                }
+
+                writeToUiAppend(etLog, "try to read a nPA (national ID-card Germany)");
+                // https://github.com/PersoApp/import/blob/1e255d54cf2260e39c2dd911079da5fd0b35c980/PersoApp-Core/src/de/persoapp/core/card/ICardHandler.java
+
+                /**
+	            * application identifier for BSI TR-03110 eID application, oid =
+	            * 0.4.0.127.0.7.3.2
+	            */
+                final String	AID_NPA		= "E80704007F00070302";
+
+                /**
+                 * application identifier for ICAO 9303 MRTD application
+                 */
+                final String	AID_ICAO	= "A0000002471001";
+
+                /**
+                 * application identifier for CEN 14890 DF.eSign
+                 */
+                final String	AID_eSign	= "A000000167455349474E";
+
+                //byte[] npaAid = BinaryUtils.hexToBytes("6F048400A500"); // default AID
+                //byte[] npaAid = BinaryUtils.hexToBytes("6F088404524F4F54A500"); // masterfile AID
+                //byte[] npaAid = BinaryUtils.hexToBytes(AID_NPA);
+                byte[] npaAid = BinaryUtils.hexToBytes(AID_ICAO);
+                command = selectApdu(npaAid);
+                byte[] responseNpaAid = nfc.transceive(command);
+                writeToUiAppend(etLog, "responseNpaAid: " + BinaryUtils.bytesToHex(responseNpaAid));
+                if (responseNpaAid == null) {
+                    writeToUiAppend(etLog, "selectApdu with npaAid fails (null)");
+                } else {
+                    if (Arrays.equals(responseNpaAid, RESULT_FAILUE)) {
+                        writeToUiAppend(etLog, "selectApdu with npaAid fails (not allowed)");
+                    } else {
+                        writeToUiAppend(etLog, "responseNpaAid length: " + responseNpaAid.length + " data: " + BinaryUtils.bytesToHex(responseNpaAid));
+                        System.out.println("used AID: " + AID_NPA);
+                        System.out.println("responseNpaAid length: " + responseNpaAid.length + " data: " + BinaryUtils.bytesToHex(responseNpaAid));
+                        // manual parsing: https://github.com/evsinev/ber-tlv
+                        // https://emvlab.org/tlvutils/
+                        // using E80704007F00070302
+                        // 6f0d8409e80704007f00070302a5009000
+                        /*
+                            6F File Control Information (FCI) Template
+ 	                            84 Dedicated File (DF) Name
+ 	 	                            E80704007F00070302
+ 	                            A5 File Control Information (FCI) Proprietary Template
+                            90 Issuer Public Key Certificate
+                         */
+                        // using A0000002471001
+                        // 6f0b8407a0000002471001a5009000
+                        /*
+                        6F File Control Information (FCI) Template
+ 	                        84 Dedicated File (DF) Name
+ 	 	                    A0000002471001
+ 	                    A5 File Control Information (FCI) Proprietary Template
+                        90 Issuer Public Key Certificate
+                         */
+                    }
+                }
+
+                String dedicatedFilename = "E80704007F00070302"; // Dedicated File (DF) Name
+
+
+            } catch (IOException e) {
+                Log.e(TAG, "IsoDep Error on connecting to card: " + e.getMessage());
+                //throw new RuntimeException(e);
+            }
+            try {
+                nfc.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+    }
+
+    // https://stackoverflow.com/a/51338700/8166854
+    private byte[] selectApdu(byte[] aid) {
+        byte[] commandApdu = new byte[6 + aid.length];
+        commandApdu[0] = (byte) 0x00;  // CLA
+        commandApdu[1] = (byte) 0xA4;  // INS
+        commandApdu[2] = (byte) 0x04;  // P1
+        commandApdu[3] = (byte) 0x00;  // P2
+        commandApdu[4] = (byte) (aid.length & 0x0FF);       // Lc
+        System.arraycopy(aid, 0, commandApdu, 5, aid.length);
+        commandApdu[commandApdu.length - 1] = (byte) 0x00;  // Le
+        return commandApdu;
     }
 
 
