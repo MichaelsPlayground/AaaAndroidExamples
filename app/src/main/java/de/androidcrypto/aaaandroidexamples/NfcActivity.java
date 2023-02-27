@@ -1,9 +1,11 @@
 package de.androidcrypto.aaaandroidexamples;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
@@ -44,11 +46,12 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
     int timeout;
     byte dsfId; // NfcV
     byte responseFlags; // NfcV
+    Tag nfcTag;
 
     final String TechNfcA = "android.nfc.tech.NfcA";
     final String TechNfcB = "android.nfc.tech.NfcB";
     final String TechNfcV = "android.nfc.tech.NfcV";
-    final String TechNdef = "android.nfc.tech.NdefFormatable";
+    final String TechNdef = "android.nfc.tech.Ndef";
     final String TechMifareUltralight = "android.nfc.tech.MifareUltralight";
     final String TechMifareClassic = "android.nfc.tech.MifareClassic";
     final String TechIsoDep = "android.nfc.tech.IsoDep";
@@ -78,7 +81,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         etLog = findViewById(R.id.etLog);
 
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-
+//showAlertDialog();
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -125,6 +128,10 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             writeToUiAppend(etLog, techList[i]);
             System.out.println("TechList: " + techList[i]);
         }
+
+        nfcTag = tag;
+        showNfcTechnologyChoice();
+
         // the next steps depend on the TechList found on the device
         for (int i = 0; i < techList.length; i++) {
             String tech = techList[i];
@@ -133,7 +140,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechNfcA: {
                         writeToUiAppend(etLog, "*** Tech ***");
                         writeToUiAppend(etLog, "Technology NfcA");
-                        readNfcA(tag);
+                        //readNfcA(tag);
                     break;
                 }
                 case TechNfcB: {
@@ -144,19 +151,19 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechNfcV: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology NfcV");
-                    readNfcV(tag);
+                    //readNfcV(tag);
                     break;
                 }
                 case TechMifareUltralight: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology Mifare Ultralight");
-                    readMifareUltralight(tag);
+                    //readMifareUltralight(tag);
                     break;
                 }
                 case TechMifareClassic: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology Mifare Classic");
-                    readMifareClassic(tag);
+                    //readMifareClassic(tag);
                     break;
                 }
                 case TechNdef: {
@@ -167,7 +174,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechIsoDep: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology IsoDep");
-                    readIsoDep(tag);
+                    //readIsoDep(tag);
                     break;
                 }
                 default: {
@@ -184,6 +191,13 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         NfcA nfc = null;
         nfc = NfcA.get(tag);
         if (nfc != null) {
+            /*
+            runOnUiThread(() -> {
+                //etLog.setText("");
+                etData.setText("");
+            });
+
+             */
             maxTransceiveLength = nfc.getMaxTransceiveLength();
             atqa = nfc.getAtqa();
             sak = nfc.getSak();
@@ -707,5 +721,48 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         });
     }
 
+    private void showNfcTechnologyChoice() {
+        runOnUiThread(() -> {
+            showAlertDialog();
+        });
+    }
+
+    private void showAlertDialog() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(NfcActivity.this);
+        alertDialog.setTitle("AlertDialog");
+        String[] items = {"NfcA","android","Data Structures","HTML","CSS"};
+        int checkedItem = 1;
+        alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        Toast.makeText(NfcActivity.this, "Clicked on NfcA", Toast.LENGTH_LONG).show();
+                        readNfcA(nfcTag);
+                        dialog.dismiss();
+                        break;
+                    case 1:
+                        Toast.makeText(NfcActivity.this, "Clicked on android", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                        break;
+                    case 2:
+                        Toast.makeText(NfcActivity.this, "Clicked on Data Structures", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                        break;
+                    case 3:
+                        Toast.makeText(NfcActivity.this, "Clicked on HTML", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                        break;
+                    case 4:
+                        Toast.makeText(NfcActivity.this, "Clicked on CSS", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                        break;
+                }
+            }
+        });
+        AlertDialog alert = alertDialog.create();
+        alert.setCanceledOnTouchOutside(false);
+        alert.show();
+    }
 
 }
