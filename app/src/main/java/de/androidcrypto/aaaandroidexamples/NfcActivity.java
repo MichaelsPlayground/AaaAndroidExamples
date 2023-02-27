@@ -238,7 +238,90 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             sb.append("dsfId: ") . append(String.valueOf(dsfId)).append("\n");
             sb.append("responseFlags: ") . append(String.valueOf(responseFlags)).append("\n");
             writeToUiAppend(etLog, sb.toString());
+            // try to connect to the tag
+            try {
+                nfc.connect();
+                writeToUiAppend(etLog, "connected to the tag");
+                // inventory
+                byte[] UIDFrame = new byte[] { (byte) 0x26, (byte) 0x01, (byte) 0x00 };
+                byte[] responseInventory = nfc.transceive(UIDFrame);
+                String responseInventoryString = BinaryUtils.bytesToHex(responseInventory);
+                writeToUiAppend(etLog, "responseInventory: " + responseInventoryString);
+                System.out.println("responseInventory: " + responseInventoryString);
+
+                byte[] GetSystemInfoFrame1bytesAddress = new byte[] { (byte) 0x02, (byte) 0x2B };
+                byte[] responseGetSystemInfoFrame1bytesAddress = nfc.transceive(GetSystemInfoFrame1bytesAddress);
+                String responseGetSystemInfoFrame1bytesAddressString = BinaryUtils.bytesToHex(responseGetSystemInfoFrame1bytesAddress);
+                writeToUiAppend(etLog, "responseGetSystemInfoFrame1bytesAddress: " + responseGetSystemInfoFrame1bytesAddressString);
+
+                writeToUiAppend(etLog, "Trying to read 52 blocks of data from the tag. This function may run on a special tag only !");
+                writeToUiAppend(etLog, "tested with Tag EM4x3x Skipass Oetztal Gurgl");
+                // read the tags 52 blocks separately
+                int NUMBER_OF_BLOCKS = 52;
+                int NUMBER_OF_BYTES_IN_BLOCK = 4;
+                byte[] responseComplete = new byte[(NUMBER_OF_BLOCKS * NUMBER_OF_BYTES_IN_BLOCK)];
+                for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
+                    //byte[] responseBlock = readOneBlockMultiple(nfcV, tagId, i);
+                    byte[] responseBlock = readOneBlockNfcV(nfc, tagId, i);
+                    if (responseBlock != null) {
+                        // copy the new bytes to responseComplete
+                        System.arraycopy(responseBlock, 0, responseComplete, (i * NUMBER_OF_BYTES_IN_BLOCK), NUMBER_OF_BYTES_IN_BLOCK);
+                        writeToUiAppend(etLog, "processing block: " + i);
+                        //String dumpBlock = HexDumpOwn.prettyPrint(responseBlock, 16);
+                        //writeToUiAppend(readResult, dumpBlock);
+                    } else {
+                        writeToUiAppend(etLog, "error on reading block " + i);
+                    }
+                }
+                writeToUiAppend(etLog, "complete content");
+                String dumpComplete = HexDumpUtil.prettyPrint(responseComplete, 0);
+                writeToUiAppend(etData, dumpComplete);
+
+            } catch (IOException e) {
+                Log.e(TAG, "Error on connecting to tag: " + e.getMessage());
+                //writeToUiToast("Error on connecting to tag: " + e.getMessage());
+                writeToUiAppend(etLog, "can not connect or read block with NfcV technology");
+            }
+
         }
+    }
+
+    private byte[] readOneBlockNfcV(NfcV nfcV, byte[] tagId, int blockNumber) {
+        byte[] RESPONSE_OK = new byte[]{
+                (byte) 0x00
+        };
+        byte[] cmd = new byte[] {
+                /* FLAGS   */ (byte)0x20,
+                /* COMMAND */ (byte)0x20, // command read single block
+                /* UID     */ (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
+                /* OFFSET  */ (byte)0x00
+        };
+        System.arraycopy(tagId, 0, cmd, 2, 8); // copy tagId to UID
+        cmd[10] = (byte)((blockNumber) & 0x0ff); // copy block number
+        try {
+            byte[] response = nfcV.transceive(cmd);
+            byte[] responseByte = getResponseByte(response);
+            if (Arrays.equals(responseByte, RESPONSE_OK)) {
+                return trimFirstByte(response);
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+            return null;
+        }
+    }
+
+    private byte[] getResponseByte(byte[] input) {
+        return Arrays.copyOfRange(input, 0, 1);
+    }
+
+    private byte[] getResponseBytes(byte[] input) {
+        return Arrays.copyOfRange(input, 0, 2);
+    }
+
+    private byte[] trimFirstByte(byte[] input) {
+        return Arrays.copyOfRange(input, 1, (input.length));
     }
 
     private void clearAllData() {
@@ -321,7 +404,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 byte[] PSE = "1PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PSE
                 byte[] PPSE = "2PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PPSE
                 byte[] RESULT_FAILUE = BinaryUtils.hexToBytes("6A82");
-                byte[] command = selectApdu(PSE);
+                byte[] command = selectApduIsoDep(PSE);
                 byte[] responsePse = nfc.transceive(command);
                 if (responsePse == null) {
                     writeToUiAppend(etLog, "selectApdu with PSE fails (null)");
@@ -333,7 +416,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                         //System.out.println("pse: " + bytesToHex(responsePse));
                     }
                 }
-                command = selectApdu(PPSE);
+                command = selectApduIsoDep(PPSE);
                 byte[] responsePpse = nfc.transceive(command);
                 if (responsePpse == null) {
                     writeToUiAppend(etLog, "selectApdu with PPSE fails (null)");
@@ -369,7 +452,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 //byte[] npaAid = BinaryUtils.hexToBytes("6F088404524F4F54A500"); // masterfile AID
                 //byte[] npaAid = BinaryUtils.hexToBytes(AID_NPA);
                 byte[] npaAid = BinaryUtils.hexToBytes(AID_ICAO);
-                command = selectApdu(npaAid);
+                command = selectApduIsoDep(npaAid);
                 byte[] responseNpaAid = nfc.transceive(command);
                 writeToUiAppend(etLog, "responseNpaAid: " + BinaryUtils.bytesToHex(responseNpaAid));
                 if (responseNpaAid == null) {
@@ -421,7 +504,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
     }
 
     // https://stackoverflow.com/a/51338700/8166854
-    private byte[] selectApdu(byte[] aid) {
+    private byte[] selectApduIsoDep(byte[] aid) {
         byte[] commandApdu = new byte[6 + aid.length];
         commandApdu[0] = (byte) 0x00;  // CLA
         commandApdu[1] = (byte) 0xA4;  // INS
@@ -464,9 +547,9 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
 
             // Loop through all sectors
             for (int sector = 0; sector < (sectorCount); ++sector) {
-                boolean authenticated = authenticateSector(nfc, sector);
+                boolean authenticated = authenticateSectorMifareClassic(nfc, sector);
                 if (authenticated) {
-                    String result = readBlockData(nfc, sector);
+                    String result = readBlockDataMifareClassic(nfc, sector);
                     writeToUiAppend(etData, "sector " + String.valueOf(sector) + " " + result);
                 } else {
                     writeToUiAppend(etData, "sector " + String.valueOf(sector) + " not authenticated");
@@ -484,7 +567,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
      * @param sector current sector
      * @return Boolean authenticated? true:false
      */
-    private boolean authenticateSector(MifareClassic mfc, int sector) {
+    private boolean authenticateSectorMifareClassic(MifareClassic mfc, int sector) {
 
         boolean authenticated = false;
         Log.i(TAG, "Authenticating Sector: " + sector + " It contains Blocks: " + mfc.getBlockCountInSector(sector));
@@ -520,7 +603,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
      * @return hex string of the read data
      */
     // source: https://github.com/tarun-nain/RFIDReader/blob/master/app/src/main/java/com/codes29/rfidreader/MainActivity.java
-    private String readBlockData(MifareClassic mfc, int sector) {
+    private String readBlockDataMifareClassic(MifareClassic mfc, int sector) {
         String blockvalues = "";
         // Read all blocks in sector
         for (int block = 0; (block < mfc.getBlockCountInSector(sector)); ++block) {
