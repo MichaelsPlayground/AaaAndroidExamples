@@ -44,7 +44,7 @@
             android:name=".NfcActivity"
             android:exported="false" />
         <activity
-            android:name=".NfcPassportActivity"
+            android:name=".NfcCreditCardActivity"
             android:exported="false" />
     </application>
 

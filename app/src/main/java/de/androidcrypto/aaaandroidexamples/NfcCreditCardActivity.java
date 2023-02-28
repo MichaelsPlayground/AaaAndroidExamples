@@ -1,5 +1,8 @@
 package de.androidcrypto.aaaandroidexamples;
 
+import static de.androidcrypto.aaaandroidexamples.BinaryUtils.bytesToHex;
+import static de.androidcrypto.aaaandroidexamples.BinaryUtils.hexToBytes;
+
 import android.content.Context;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
@@ -24,13 +27,21 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.payneteasy.tlv.BerTag;
+import com.payneteasy.tlv.BerTlv;
+import com.payneteasy.tlv.BerTlvParser;
+import com.payneteasy.tlv.BerTlvs;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
-public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
+import de.androidcrypto.aaaandroidexamples.nfccreditcards.TagValues;
 
-    private final String TAG = "NfcPassportAct";
+public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
+
+    private final String TAG = "NfcCreditCardAct";
 
     Button btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9;
     TextView tv1;
@@ -57,7 +68,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_nfc_passport);
+        setContentView(R.layout.activity_nfc_creditcard);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
@@ -83,7 +94,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "btn1 back to main menu");
-                Intent intent = new Intent(NfcPassportActivity.this, MainActivity.class);
+                Intent intent = new Intent(NfcCreditCardActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -118,7 +129,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
             v.vibrate(200);
         }
         tagId = tag.getId();
-        writeToUiAppend(etLog, "TagId: " + BinaryUtils.bytesToHex(tagId));
+        writeToUiAppend(etLog, "TagId: " + bytesToHex(tagId));
         String[] techList = tag.getTechList();
         writeToUiAppend(etLog, "TechList found with these entries:");
         for (int i = 0; i < techList.length; i++) {
@@ -130,10 +141,11 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
             String tech = techList[i];
             writeToUiAppend(etLog, "");
             switch (tech) {
+                /*
                 case TechNfcA: {
                         writeToUiAppend(etLog, "*** Tech ***");
                         writeToUiAppend(etLog, "Technology NfcA");
-                        readNfcA(tag);
+                        //readNfcA(tag);
                     break;
                 }
                 case TechNfcB: {
@@ -144,19 +156,19 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
                 case TechNfcV: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology NfcV");
-                    readNfcV(tag);
+                    //readNfcV(tag);
                     break;
                 }
                 case TechMifareUltralight: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology Mifare Ultralight");
-                    readMifareUltralight(tag);
+                    //readMifareUltralight(tag);
                     break;
                 }
                 case TechMifareClassic: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology Mifare Classic");
-                    readMifareClassic(tag);
+                    //readMifareClassic(tag);
                     break;
                 }
                 case TechNdef: {
@@ -164,6 +176,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
                     writeToUiAppend(etLog, "Technology NdefFormatable");
                     break;
                 }
+                 */
                 case TechIsoDep: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology IsoDep");
@@ -179,6 +192,340 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
         }
     }
 
+    private void readIsoDep(Tag tag) {
+        Log.i(TAG, "read a tag with IsoDep technology");
+        IsoDep nfc = null;
+        nfc = IsoDep.get(tag);
+        if (nfc != null) {
+            maxTransceiveLength = nfc.getMaxTransceiveLength();
+            int timeout = nfc.getTimeout();
+            byte[] historicalBytes = nfc.getHistoricalBytes(); // on tags based on NfcA it is filled, otherwise null
+            byte[] hiLayerResponse = nfc.getHiLayerResponse(); // on tags based on NfcB it is filled, otherwise null
+            boolean extendedLengthApduSupport = nfc.isExtendedLengthApduSupported();
+            StringBuilder sb = new StringBuilder();
+            sb.append("TechParameter") . append("\n");
+            sb.append("maxTransceiveLength: ") . append(String.valueOf(maxTransceiveLength)).append("\n");
+            sb.append("timeout: ") . append(String.valueOf(timeout)).append("\n");
+            if (historicalBytes != null) sb.append("historicalBytes: ") . append(bytesToHex(historicalBytes)).append("\n");
+            if (hiLayerResponse != null) sb.append("hiLayerResponse: ") . append(bytesToHex(hiLayerResponse)).append("\n");
+            sb.append("extendedLengthApduSupport: ") . append(String.valueOf(extendedLengthApduSupport)).append("\n");
+            writeToUiAppend(etLog, sb.toString());
+
+            try {
+                nfc.connect();
+                writeToUiAppend(etLog, "try to read a payment card with PSE and PPSE");
+
+                byte[] command;
+
+                writeToUiAppend(etLog,"");
+                writeToUiAppend(etLog, "01 select PSE");
+                byte[] PSE = "1PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PSE
+                command = selectApdu(PSE);
+                byte[] responsePse = nfc.transceive(command);
+                writeToUiAppend(etLog, "01 select PSE response length " + responsePse.length + " data: " + bytesToHex(responsePse));
+                boolean responsePseNotAllowed = responseNotAllowed(responsePse);
+                if (responsePseNotAllowed) {
+                    writeToUiAppend(etLog, "01 selecting PSE is not allowed on card");
+                }
+
+                writeToUiAppend(etLog,"");
+                writeToUiAppend(etLog, "02 select PPSE");
+                byte[] PPSE = "2PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PPSE
+                command = selectApdu(PPSE);
+                byte[] responsePpse = nfc.transceive(command);
+                writeToUiAppend(etLog, "02 select PPSE response length " + responsePpse.length + " data: " + bytesToHex(responsePpse));
+                boolean responsePpseNotAllowed = responseNotAllowed(responsePpse);
+                if (responsePpseNotAllowed) {
+                    writeToUiAppend(etLog, "02 selecting PPSE is not allowed on card");
+                }
+
+                if (responsePseNotAllowed && responsePpseNotAllowed) {
+                    writeToUiAppend(etLog,"");
+                    writeToUiAppend(etLog,"The card is not a credit card, reading aborted");
+                    try {
+                        nfc.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return;
+                }
+
+                writeToUiAppend(etLog,"");
+                writeToUiAppend(etLog, "04 analyze PPSE");
+                TagValues tv = new TagValues();
+                System.out.println("get tv: " + tv.getEmvTagList());
+
+                byte[] responseOk = checkResponse(responsePpse);
+                if (responseOk != null) {
+                    System.out.println("# selectPpse response:" + bytesToHex(responseOk));
+/*
+MC AAB: response:6f3c840e325041592e5359532e4444463031a52abf0c2761254f07a000000004101050104465626974204d6173746572436172648701019f0a0400010101
+6F File Control Information (FCI) Template
+ 	84 Dedicated File (DF) Name
+ 	 	325041592E5359532E4444463031
+ 	A5 File Control Information (FCI) Proprietary Template
+ 	 	BF0C File Control Information (FCI) Issuer Discretionary Data
+ 	 	 	61 Application Template
+ 	 	 	 	4F Application Identifier (AID) – card
+ 	 	 	 	 	A0000000041010
+ 	 	 	 	50 Application Label
+ 	 	 	 	 	D e b i t M a s t e r C a r d
+ 	 	 	 	87 Application Priority Indicator
+ 	 	 	 	 	01
+ 	 	 	 	9F0A Unknown tag
+ 	 	 	 	 	00010101
+ */
+/*
+Lloyds # selectPpse response:6f2b840e325041592e5359532e4444463031a519bf0c1661144f07a00000000310109f0a080001050100000000
+6F File Control Information (FCI) Template
+ 	84 Dedicated File (DF) Name
+ 	 	325041592E5359532E4444463031
+ 	A5 File Control Information (FCI) Proprietary Template
+ 	 	BF0C File Control Information (FCI) Issuer Discretionary Data
+ 	 	 	61 Application Template
+ 	 	 	 	4F Application Identifier (AID) – card
+ 	 	 	 	 	A0000000031010
+ 	 	 	 	9F0A Unknown tag
+ 	 	 	 	 	0001050100000000
+ */
+/*
+Voba RF # selectPpse response:6f67840e325041592e5359532e4444463031a555bf0c5261194f09a000000059454301008701019f0a080001050100000000611a4f0aa00000035910100280018701019f0a08000105010000000061194f09d276000025474101008701019f0a080001050100000000
+6F File Control Information (FCI) Template
+ 	84 Dedicated File (DF) Name
+ 	 	325041592E5359532E4444463031
+ 	A5 File Control Information (FCI) Proprietary Template
+ 	 	BF0C File Control Information (FCI) Issuer Discretionary Data
+ 	 	 	61 Application Template
+ 	 	 	 	4F Application Identifier (AID) – card
+ 	 	 	 	 	A00000005945430100
+ 	 	 	 	87 Application Priority Indicator
+ 	 	 	 	 	01
+ 	 	 	 	9F0A Unknown tag
+ 	 	 	 	 	0001050100000000
+ 	 	 	61 Application Template
+ 	 	 	 	4F Application Identifier (AID) – card
+ 	 	 	 	 	A0000003591010028001
+ 	 	 	 	87 Application Priority Indicator
+ 	 	 	 	 	01
+ 	 	 	 	9F0A Unknown tag
+ 	 	 	 	 	0001050100000000
+ 	 	 	61 Application Template
+ 	 	 	 	4F Application Identifier (AID) – card
+ 	 	 	 	 	D27600002547410100
+ 	 	 	 	87 Application Priority Indicator
+ 	 	 	 	 	01
+ 	 	 	 	9F0A Unknown tag
+ 	 	 	 	 	0001050100000000
+ */
+
+                    BerTlvParser parser = new BerTlvParser();
+                    BerTlvs tlvs = parser.parse(responseOk);
+                    List<BerTlv> tlvList = tlvs.getList();
+                    int tlvListLength = tlvList.size();
+                    writeToUiAppend(etLog, "tlvListLength length: " + tlvListLength);
+                    for (int i = 0; i < tlvListLength; i++) {
+                        BerTlv tlv = tlvList.get(i);
+                        BerTag berTag = tlv.getTag();
+                        boolean tagIsConstructed = berTag.isConstructed();
+                        writeToUiAppend(etLog, "BerTag: " + berTag.toString());
+                        writeToUiAppend(etLog, "BerTag name: " + tv.getEmvTagName(berTag.bytes).getTagName());
+                        writeToUiAppend(etLog, "BerTag is constructed: " + tagIsConstructed);
+                        // we need to get tag 6F that is constructed
+                        if (Arrays.equals(berTag.bytes, new byte[]{(byte) 0x6f})) {
+                            BerTlv tag6f = tlvs.find(new BerTag(0x6F));
+                            //writeToUiAppend(readResult, "tag6f is constructed: " + tag6f.isConstructed());
+                            //byte[] tag6fValue = tag6f.getBytesValue(); // gives error, tag6f is constructed
+                            //writeToUiAppend(readResult, "tag6fValue length: " + tag6fValue.length + " data: " + bytesToHex(tag6fValue));
+                            List<BerTlv> tag6fVals = tag6f.getValues();
+                            int tag6fValLength = tag6fVals.size();
+                            writeToUiAppend(etLog, "tag6fValLength length: " + tag6fValLength);
+                            for (int i2 = 0; i2 < tag6fValLength; i2++) {
+                                BerTlv tlv2 = tag6fVals.get(i2);
+                                BerTag berTag2 = tlv2.getTag();
+                                //writeToUiAppend(etLog, "BerTag: " + berTag2.toString());
+                                tagIsConstructed = berTag2.isConstructed();
+                                writeToUiAppend(etLog, "BerTag: " + berTag2.toString());
+                                writeToUiAppend(etLog, "BerTag name: " + tv.getEmvTagName(berTag2.bytes).getTagName());
+                                writeToUiAppend(etLog, "BerTag is constructed: " + tagIsConstructed);
+                                // need to get tag a5 that is constructed
+                                if (Arrays.equals(berTag.bytes, new byte[]{(byte) 0xa5})) {
+                                    BerTlv tagA5 = tlvs.find(new BerTag(0xA5));
+                                    //writeToUiAppend(readResult, "tag6f is constructed: " + tag6f.isConstructed());
+                                    //byte[] tag6fValue = tag6f.getBytesValue(); // gives error, tag6f is constructed
+                                    //writeToUiAppend(readResult, "tag6fValue length: " + tag6fValue.length + " data: " + bytesToHex(tag6fValue));
+                                    List<BerTlv> tagA5Vals = tagA5.getValues();
+                                    int tagA5ValLength = tagA5Vals.size();
+                                    writeToUiAppend(etLog, "tagA5ValLength length: " + tagA5ValLength);
+                                    for (int i3 = 0; i3 < tagA5ValLength; i3++) {
+                                        BerTlv tlv3 = tagA5Vals.get(i3);
+                                        BerTag berTag3 = tlv3.getTag();
+                                        //writeToUiAppend(etLog, "BerTag: " + berTag2.toString());
+                                        tagIsConstructed = berTag3.isConstructed();
+                                        writeToUiAppend(etLog, "BerTag: " + berTag3.toString());
+                                        writeToUiAppend(etLog, "BerTag name: " + tv.getEmvTagName(berTag3.bytes).getTagName());
+                                        writeToUiAppend(etLog, "BerTag is constructed: " + tagIsConstructed);
+
+                                    }
+
+                                }
+                            }
+                            // here we are shortening the parsing through the tree and try to find the AID(s) on the card
+                            List<BerTlv> tag4fList = tlvs.findAll(new BerTag(0x4F));
+                            if (tag4fList.size() < 1) {
+                                writeToUiAppend(etLog, "there is no tag 4f available, stopping here");
+                                try {
+                                    nfc.close();
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                return;
+                            }
+                            for (int i4f = 0; i4f < tag4fList.size(); i4f++) {
+                                BerTlv tlv4f = tag4fList.get(i4f);
+                                BerTag berTag4f = tlv4f.getTag();
+                                byte[] tlv4fBytes = tlv4f.getBytesValue();
+                                writeToUiAppend(etLog, "BerTag: " + berTag4f.toString());
+                                writeToUiAppend(etLog, "BerTag name: " + tv.getEmvTagName(berTag4f.bytes).getTagName());
+                                writeToUiAppend(etLog, "BerTag value: " + bytesToHex(tlv4fBytes));
+                            }
+
+                        }
+                    }
+                }                /*
+
+                if (responsePse == null) {
+                    writeToUiAppend(etLog, "selectApdu with PSE fails (null)");
+                } else {
+                    if (Arrays.equals(responsePse, RESULT_FAILUE)) {
+                        writeToUiAppend(etLog, "selectApdu with PSE fails (not allowed)");
+                    } else {
+                        writeToUiAppend(etLog, "responsePse length: " + responsePse.length + " data: " + bytesToHex(responsePse));
+                        //System.out.println("pse: " + bytesToHex(responsePse));
+                    }
+                }
+                command = selectApdu(PPSE);
+                byte[] responsePpse = nfc.transceive(command);
+                if (responsePpse == null) {
+                    writeToUiAppend(etLog, "selectApdu with PPSE fails (null)");
+                } else {
+                    if (Arrays.equals(responsePpse, RESULT_FAILUE)) {
+                        writeToUiAppend(etLog, "selectApdu with PPSE fails (not allowed)");
+                    } else {
+                        writeToUiAppend(etLog, "responsePpse length: " + responsePpse.length + " data: " + bytesToHex(responsePpse));
+                        //System.out.println("pse: " + bytesToHex(responsePse));
+                    }
+                }
+
+                writeToUiAppend(etLog, "try to read a nPA (national ID-card Germany)");
+                // https://github.com/PersoApp/import/blob/1e255d54cf2260e39c2dd911079da5fd0b35c980/PersoApp-Core/src/de/persoapp/core/card/ICardHandler.java
+*/
+                /**
+                 * application identifier for BSI TR-03110 eID application, oid =
+                 * 0.4.0.127.0.7.3.2
+                 */
+                final String	AID_NPA		= "E80704007F00070302";
+
+                /**
+                 * application identifier for ICAO 9303 MRTD application
+                 */
+                final String	AID_ICAO	= "A0000002471001";
+
+                /**
+                 * application identifier for CEN 14890 DF.eSign
+                 */
+                final String	AID_eSign	= "A000000167455349474E";
+/*
+                //byte[] npaAid = hexToBytes("6F048400A500"); // default AID
+                //byte[] npaAid = hexToBytes("6F088404524F4F54A500"); // masterfile AID
+                //byte[] npaAid = hexToBytes(AID_NPA);
+                byte[] npaAid = hexToBytes(AID_ICAO);
+                command = selectApdu(npaAid);
+                byte[] responseNpaAid = nfc.transceive(command);
+                writeToUiAppend(etLog, "responseNpaAid: " + bytesToHex(responseNpaAid));
+                if (responseNpaAid == null) {
+                    writeToUiAppend(etLog, "selectApdu with npaAid fails (null)");
+                } else {
+                    if (Arrays.equals(responseNpaAid, RESULT_FAILUE)) {
+                        writeToUiAppend(etLog, "selectApdu with npaAid fails (not allowed)");
+                    } else {
+                        writeToUiAppend(etLog, "responseNpaAid length: " + responseNpaAid.length + " data: " + bytesToHex(responseNpaAid));
+                        System.out.println("used AID: " + AID_NPA);
+                        System.out.println("responseNpaAid length: " + responseNpaAid.length + " data: " + bytesToHex(responseNpaAid));
+ */
+                        // manual parsing: https://github.com/evsinev/ber-tlv
+                        // https://emvlab.org/tlvutils/
+                        // using E80704007F00070302
+                        // 6f0d8409e80704007f00070302a5009000
+                        /*
+                            6F File Control Information (FCI) Template
+ 	                            84 Dedicated File (DF) Name
+ 	 	                            E80704007F00070302
+ 	                            A5 File Control Information (FCI) Proprietary Template
+                            90 Issuer Public Key Certificate
+                         */
+                        // using A0000002471001
+                        // 6f0b8407a0000002471001a5009000
+                        /*
+                        6F File Control Information (FCI) Template
+ 	                        84 Dedicated File (DF) Name
+ 	 	                    A0000002471001
+ 	                    A5 File Control Information (FCI) Proprietary Template
+                        90 Issuer Public Key Certificate
+                         */
+                    //}
+                //}
+
+                String dedicatedFilename = "E80704007F00070302"; // Dedicated File (DF) Name
+
+
+            } catch (IOException e) {
+                Log.e(TAG, "IsoDep Error on connecting to card: " + e.getMessage());
+                //throw new RuntimeException(e);
+            }
+            try {
+                nfc.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+    }
+
+    private byte[] checkResponse(byte[] data) {
+        if (data.length < 5) return null; // not ok
+        int status = ((0xff & data[data.length - 2]) << 8) | (0xff & data[data.length - 1]);
+        if (status != 0x9000) {
+            return null;
+        } else {
+            return Arrays.copyOfRange(data, 0, data.length - 2);
+        }
+    }
+
+
+    private boolean responseNotAllowed(byte[] data) {
+        byte[] RESULT_FAILUE = hexToBytes("6a82");
+        if (data.equals(RESULT_FAILUE)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // https://stackoverflow.com/a/51338700/8166854
+    private byte[] selectApdu(byte[] aid) {
+        byte[] commandApdu = new byte[6 + aid.length];
+        commandApdu[0] = (byte) 0x00;  // CLA
+        commandApdu[1] = (byte) 0xA4;  // INS
+        commandApdu[2] = (byte) 0x04;  // P1
+        commandApdu[3] = (byte) 0x00;  // P2
+        commandApdu[4] = (byte) (aid.length & 0x0FF);       // Lc
+        System.arraycopy(aid, 0, commandApdu, 5, aid.length);
+        commandApdu[commandApdu.length - 1] = (byte) 0x00;  // Le
+        return commandApdu;
+    }
+    
+    
+    
     private void readNfcA(Tag tag) {
         Log.i(TAG, "read a tag with NfcA technology");
         NfcA nfc = null;
@@ -191,7 +538,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
             StringBuilder sb = new StringBuilder();
             sb.append("TechParameter") . append("\n");
             sb.append("maxTransceiveLength: ") . append(String.valueOf(maxTransceiveLength)).append("\n");
-            if (atqa != null) sb.append("atqa: ") . append(BinaryUtils.bytesToHex(atqa)).append("\n");
+            if (atqa != null) sb.append("atqa: ") . append(bytesToHex(atqa)).append("\n");
             sb.append("sak: ") . append(String.valueOf(sak)).append("\n");
             sb.append("timeout: ") . append(String.valueOf(timeout)).append("\n");
             writeToUiAppend(etLog, sb.toString());
@@ -206,7 +553,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
                             (byte) 0x30, // READ
                             (byte) 0x00  // page address
                     });
-                    String responseString = BinaryUtils.bytesToHex(response);
+                    String responseString = bytesToHex(response);
                     writeToUiAppend(etData, "NfcA data for block 00");
                     writeToUiAppend(etData, responseString);
                     nfc.close();
@@ -280,7 +627,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
                 for (int i = 0; i < numberOfPagesRead; i++) {
                     // a readPages returns not 1 page but 4 pages = 16 bytes of data
                     byte[] pageData = nfc.readPages(i * 4);
-                    writeToUiAppend(etData, "MiUl page " + i + " " + BinaryUtils.bytesToHex(pageData));
+                    writeToUiAppend(etData, "MiUl page " + i + " " + bytesToHex(pageData));
                 }
 
             } catch (IOException e) {
@@ -296,142 +643,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
         }
     }
 
-    private void readIsoDep(Tag tag) {
-        Log.i(TAG, "read a tag with IsoDep technology");
-        IsoDep nfc = null;
-        nfc = IsoDep.get(tag);
-        if (nfc != null) {
-            maxTransceiveLength = nfc.getMaxTransceiveLength();
-            int timeout = nfc.getTimeout();
-            byte[] historicalBytes = nfc.getHistoricalBytes(); // on tags based on NfcA it is filled, otherwise null
-            byte[] hiLayerResponse = nfc.getHiLayerResponse(); // on tags based on NfcB it is filled, otherwise null
-            boolean extendedLengthApduSupport = nfc.isExtendedLengthApduSupported();
-            StringBuilder sb = new StringBuilder();
-            sb.append("TechParameter") . append("\n");
-            sb.append("maxTransceiveLength: ") . append(String.valueOf(maxTransceiveLength)).append("\n");
-            sb.append("timeout: ") . append(String.valueOf(timeout)).append("\n");
-            if (historicalBytes != null) sb.append("historicalBytes: ") . append(BinaryUtils.bytesToHex(historicalBytes)).append("\n");
-            if (hiLayerResponse != null) sb.append("hiLayerResponse: ") . append(BinaryUtils.bytesToHex(hiLayerResponse)).append("\n");
-            sb.append("extendedLengthApduSupport: ") . append(String.valueOf(extendedLengthApduSupport)).append("\n");
-            writeToUiAppend(etLog, sb.toString());
-
-            try {
-                nfc.connect();
-                writeToUiAppend(etLog, "try to read a payment card with PSE and PPSE");
-                byte[] PSE = "1PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PSE
-                byte[] PPSE = "2PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PPSE
-                byte[] RESULT_FAILUE = BinaryUtils.hexToBytes("6A82");
-                byte[] command = selectApdu(PSE);
-                byte[] responsePse = nfc.transceive(command);
-                if (responsePse == null) {
-                    writeToUiAppend(etLog, "selectApdu with PSE fails (null)");
-                } else {
-                    if (Arrays.equals(responsePse, RESULT_FAILUE)) {
-                        writeToUiAppend(etLog, "selectApdu with PSE fails (not allowed)");
-                    } else {
-                        writeToUiAppend(etLog, "responsePse length: " + responsePse.length + " data: " + BinaryUtils.bytesToHex(responsePse));
-                        //System.out.println("pse: " + bytesToHex(responsePse));
-                    }
-                }
-                command = selectApdu(PPSE);
-                byte[] responsePpse = nfc.transceive(command);
-                if (responsePpse == null) {
-                    writeToUiAppend(etLog, "selectApdu with PPSE fails (null)");
-                } else {
-                    if (Arrays.equals(responsePpse, RESULT_FAILUE)) {
-                        writeToUiAppend(etLog, "selectApdu with PPSE fails (not allowed)");
-                    } else {
-                        writeToUiAppend(etLog, "responsePpse length: " + responsePpse.length + " data: " + BinaryUtils.bytesToHex(responsePpse));
-                        //System.out.println("pse: " + bytesToHex(responsePse));
-                    }
-                }
-
-                writeToUiAppend(etLog, "try to read a nPA (national ID-card Germany)");
-                // https://github.com/PersoApp/import/blob/1e255d54cf2260e39c2dd911079da5fd0b35c980/PersoApp-Core/src/de/persoapp/core/card/ICardHandler.java
-
-                /**
-	            * application identifier for BSI TR-03110 eID application, oid =
-	            * 0.4.0.127.0.7.3.2
-	            */
-                final String	AID_NPA		= "E80704007F00070302";
-
-                /**
-                 * application identifier for ICAO 9303 MRTD application
-                 */
-                final String	AID_ICAO	= "A0000002471001";
-
-                /**
-                 * application identifier for CEN 14890 DF.eSign
-                 */
-                final String	AID_eSign	= "A000000167455349474E";
-
-                //byte[] npaAid = BinaryUtils.hexToBytes("6F048400A500"); // default AID
-                //byte[] npaAid = BinaryUtils.hexToBytes("6F088404524F4F54A500"); // masterfile AID
-                //byte[] npaAid = BinaryUtils.hexToBytes(AID_NPA);
-                byte[] npaAid = BinaryUtils.hexToBytes(AID_ICAO);
-                command = selectApdu(npaAid);
-                byte[] responseNpaAid = nfc.transceive(command);
-                writeToUiAppend(etLog, "responseNpaAid: " + BinaryUtils.bytesToHex(responseNpaAid));
-                if (responseNpaAid == null) {
-                    writeToUiAppend(etLog, "selectApdu with npaAid fails (null)");
-                } else {
-                    if (Arrays.equals(responseNpaAid, RESULT_FAILUE)) {
-                        writeToUiAppend(etLog, "selectApdu with npaAid fails (not allowed)");
-                    } else {
-                        writeToUiAppend(etLog, "responseNpaAid length: " + responseNpaAid.length + " data: " + BinaryUtils.bytesToHex(responseNpaAid));
-                        System.out.println("used AID: " + AID_NPA);
-                        System.out.println("responseNpaAid length: " + responseNpaAid.length + " data: " + BinaryUtils.bytesToHex(responseNpaAid));
-                        // manual parsing: https://github.com/evsinev/ber-tlv
-                        // https://emvlab.org/tlvutils/
-                        // using E80704007F00070302
-                        // 6f0d8409e80704007f00070302a5009000
-                        /*
-                            6F File Control Information (FCI) Template
- 	                            84 Dedicated File (DF) Name
- 	 	                            E80704007F00070302
- 	                            A5 File Control Information (FCI) Proprietary Template
-                            90 Issuer Public Key Certificate
-                         */
-                        // using A0000002471001
-                        // 6f0b8407a0000002471001a5009000
-                        /*
-                        6F File Control Information (FCI) Template
- 	                        84 Dedicated File (DF) Name
- 	 	                    A0000002471001
- 	                    A5 File Control Information (FCI) Proprietary Template
-                        90 Issuer Public Key Certificate
-                         */
-                    }
-                }
-
-                String dedicatedFilename = "E80704007F00070302"; // Dedicated File (DF) Name
-
-
-            } catch (IOException e) {
-                Log.e(TAG, "IsoDep Error on connecting to card: " + e.getMessage());
-                //throw new RuntimeException(e);
-            }
-            try {
-                nfc.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-        }
-    }
-
-    // https://stackoverflow.com/a/51338700/8166854
-    private byte[] selectApdu(byte[] aid) {
-        byte[] commandApdu = new byte[6 + aid.length];
-        commandApdu[0] = (byte) 0x00;  // CLA
-        commandApdu[1] = (byte) 0xA4;  // INS
-        commandApdu[2] = (byte) 0x04;  // P1
-        commandApdu[3] = (byte) 0x00;  // P2
-        commandApdu[4] = (byte) (aid.length & 0x0FF);       // Lc
-        System.arraycopy(aid, 0, commandApdu, 5, aid.length);
-        commandApdu[commandApdu.length - 1] = (byte) 0x00;  // Le
-        return commandApdu;
-    }
+    
 
 
     /**
@@ -533,7 +745,7 @@ public class NfcPassportActivity extends AppCompatActivity implements NfcAdapter
                     // Read block data from block index
                     byte[] data = mfc.readBlock(blockIndex);
                     if (!(sector == 0 && block == 0)) {
-                        String temp = BinaryUtils.bytesToHex(data);
+                        String temp = bytesToHex(data);
                         blockvalues += temp;
                         Log.i(TAG, "Block " + blockIndex + " : " + temp);
                     }

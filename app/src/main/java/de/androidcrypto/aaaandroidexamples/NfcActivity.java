@@ -26,9 +26,15 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.payneteasy.tlv.BerTagFactory;
+import com.payneteasy.tlv.BerTlv;
+import com.payneteasy.tlv.BerTlvParser;
+import com.payneteasy.tlv.BerTlvs;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
@@ -432,6 +438,11 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         }
     }
 
+    /**
+     * section for IsoDep
+     */
+
+
     private void readIsoDep(Tag tag) {
         Log.i(TAG, "read a tag with IsoDep technology");
         IsoDep nfc = null;
@@ -459,6 +470,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 byte[] RESULT_FAILUE = BinaryUtils.hexToBytes("6A82");
                 byte[] command = selectApduIsoDep(PSE);
                 byte[] responsePse = nfc.transceive(command);
+                System.out.println("* selectPse response: " + BinaryUtils.bytesToHex(responsePse));
                 if (responsePse == null) {
                     writeToUiAppend(etLog, "selectApdu with PSE fails (null)");
                 } else {
@@ -471,6 +483,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 }
                 command = selectApduIsoDep(PPSE);
                 byte[] responsePpse = nfc.transceive(command);
+                System.out.println("* selectPpse response: " + BinaryUtils.bytesToHex(responsePpse));
                 if (responsePpse == null) {
                     writeToUiAppend(etLog, "selectApdu with PPSE fails (null)");
                 } else {
@@ -481,6 +494,21 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                         //System.out.println("pse: " + bytesToHex(responsePse));
                     }
                 }
+
+                if (responsePpse != null) {
+                    //final BerTlvLoggerSlf4j LOG = new BerTlvLoggerSlf4j();
+                    BerTlvParser parser = new BerTlvParser();
+                    BerTlvs tlvs = parser.parse(responsePpse, 0, responsePpse.length);
+                    List<BerTlv> tlv = tlvs.getList();
+                    for (int i = 0; i < tlv.size(); i++) {
+                        System.out.println("ppse i " + i + " " + tlv.get(i).toString());
+                    }
+                }
+
+
+
+
+
 
                 writeToUiAppend(etLog, "try to read a nPA (national ID-card Germany)");
                 // https://github.com/PersoApp/import/blob/1e255d54cf2260e39c2dd911079da5fd0b35c980/PersoApp-Core/src/de/persoapp/core/card/ICardHandler.java
