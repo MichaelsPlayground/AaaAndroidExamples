@@ -130,7 +130,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
         }
 
         nfcTag = tag;
-        showNfcTechnologyChoice();
+        //showNfcTechnologyChoice();
 
         // the next steps depend on the TechList found on the device
         for (int i = 0; i < techList.length; i++) {
@@ -140,7 +140,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechNfcA: {
                         writeToUiAppend(etLog, "*** Tech ***");
                         writeToUiAppend(etLog, "Technology NfcA");
-                        //readNfcA(tag);
+                        readNfcA(tag);
                     break;
                 }
                 case TechNfcB: {
@@ -151,19 +151,19 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechNfcV: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology NfcV");
-                    //readNfcV(tag);
+                    readNfcV(tag);
                     break;
                 }
                 case TechMifareUltralight: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology Mifare Ultralight");
-                    //readMifareUltralight(tag);
+                    readMifareUltralight(tag);
                     break;
                 }
                 case TechMifareClassic: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology Mifare Classic");
-                    //readMifareClassic(tag);
+                    readMifareClassic(tag);
                     break;
                 }
                 case TechNdef: {
@@ -174,7 +174,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                 case TechIsoDep: {
                     writeToUiAppend(etLog, "*** Tech ***");
                     writeToUiAppend(etLog, "Technology IsoDep");
-                    //readIsoDep(tag);
+                    readIsoDep(tag);
                     break;
                 }
                 default: {
@@ -223,6 +223,19 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                     String responseString = BinaryUtils.bytesToHex(response);
                     writeToUiAppend(etData, "NfcA data for block 00");
                     writeToUiAppend(etData, responseString);
+
+                    byte[] referenceBlock = readOneBlockNfcA(nfc, 0);
+                    System.out.println("* i: " + 0 + " data length: " + referenceBlock.length + " data: " + BinaryUtils.bytesToHex(referenceBlock));
+                    for (int i = 1; i < 500; i++) {
+                        byte[] data = readOneBlockNfcA(nfc, (i * 4));
+                        if (data != null) {
+                            System.out.println("* i: " + i + " data length: " + data.length + " data: " + BinaryUtils.bytesToHex(data));
+                        }
+                    }
+
+                    //res = readOneBlockNfcA(nfc, 1);
+                    //res = readOneBlockNfcA(nfc, 2);
+
                     nfc.close();
                 }
             } catch (IOException e) {
@@ -236,6 +249,32 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    /** read an NfcA tag
+     * @param nfcA
+     * @param blockNumber
+     * @return 16 bytes of data = 4 blocks of 4 bytes each
+     */
+    private byte[] readOneBlockNfcA(NfcA nfcA, int blockNumber) {
+        byte[] cmd = new byte[]{
+                    (byte) 0x30, // READ
+                (byte)((blockNumber) & 0x0ff)  // page address
+            };
+
+        byte[] RESPONSE_OK = new byte[]{
+                (byte) 0x00
+        };
+
+        try {
+            return nfcA.transceive(cmd);
+            //System.out.println("*** nfcA blockNumber: " + blockNumber);
+            //System.out.println("*** response length: " + response.length + " data: " + BinaryUtils.bytesToHex(response));
+
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+            return null;
         }
     }
 
@@ -730,7 +769,7 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
     private void showAlertDialog() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(NfcActivity.this);
         alertDialog.setTitle("AlertDialog");
-        String[] items = {"NfcA","android","Data Structures","HTML","CSS"};
+        String[] items = {"NfcA","NfcV","Data Structures","HTML","CSS"};
         int checkedItem = 1;
         alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
             @Override
