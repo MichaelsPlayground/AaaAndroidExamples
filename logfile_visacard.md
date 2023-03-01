@@ -7,13 +7,14 @@ The data in this document come from a real but outdated creditcard, so I don't m
 There are xx steps to read the PAN (primary account number = credit card number) and the card's expiration date:
 
 1) **select PPSE**: this will retrieve all applications and their **Application ID** available on the card
-2) **select Application**: select an application by its ID (AID), after this step the card is released for further readings
-3) **search for tag 0x9F38 in the response from step 2** The tag 0x9F38 is the **Processing Options Data Object List (PDOL)** that we need for further processing
-4) **get the processing options**: providing PDOL-data from step 3 gives the **AFL application file list** where we can read the data
-5) **read the files from card**: think of a file directory and the AFL from step 4 lists all files on the card. Read each file and try 
+2) **analyze select PPSE respond**: search for tag(s) 0x4F (Application Identifier (AID) - card)
+3) **select Application**: select an application by its ID (AID) found in step 2, after this step the card is released for further readings
+4) **search for tag 0x9F38 in the response from step 3** The tag 0x9F38 is the **Processing Options Data Object List (PDOL)** that we need for further processing
+5) **get the processing options**: providing PDOL-data from step 3 gives the **AFL application file list** where we can read the data
+6) **read the files from card**: think of a file directory and the AFL from step 4 lists all files on the card. Read each file and try 
 to find the data we want to show (PAN and expiration date)
-6) **search in each file for the tag 0x57**: tag 0x57 is the **Track 2 Equivalent Data** that has the PAN and expiration date as data fields.
-7) **get PAN and expiration date** from the content in tag 0x57 value.
+7) **search in each file for the tag 0x57**: tag 0x57 is the **Track 2 Equivalent Data** that has the PAN and expiration date as data fields.
+8) **get PAN and expiration date** from the content in tag 0x57 value.
 
 Below is a full workflow for the steps above. In most cases there are 3 parts for each step:
 - the command send to the card in hex encoding
