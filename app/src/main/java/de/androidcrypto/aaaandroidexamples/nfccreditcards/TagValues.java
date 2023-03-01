@@ -15,6 +15,13 @@ public class TagValues {
     private final EmvTag t84 = setTag(new byte[]{(byte) 0x84}, "Dedicated File (DF) Name", true);
     private final EmvTag ta5 = setTag(new byte[]{(byte) 0xa5}, "File Control Information (FCI) Proprietary Template", true);
     private final EmvTag t4f = setTag(new byte[]{(byte) 0x4f}, "Application Identifier (AID) - card", true);
+    private final EmvTag t9f38 = setTag(new byte[]{(byte) 0x9f, (byte) 0x38}, "Processing Options Data Object List (PDOL)", true);
+    private final EmvTag t57 = setTag(new byte[]{(byte) 0x57}, "Track 2 Equivalent Data", true);
+    private final EmvTag t94 = setTag(new byte[]{(byte) 0x94}, "Application File Locator (AFL)", true);
+    private final EmvTag t5a = setTag(new byte[]{(byte) 0x5a}, "Application Primary Account Number (PAN)", true);
+    private final EmvTag t5f24 = setTag(new byte[]{(byte) 0x5f24}, "Application Expiration Date", true);
+
+    //Application File Locator (AFL)
 
     public TagValues() {
         // empty constructor to fill the emvTagList
