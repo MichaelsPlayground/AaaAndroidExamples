@@ -226,6 +226,7 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
                 if (responsePseNotAllowed) {
                     writeToUiAppend(etLog, "01 selecting PSE is not allowed on card");
                 }
+                System.out.println("### analyze selectPse: " + bytesToHex(checkResponse(responsePse)));
 
                 writeToUiAppend(etLog, "");
                 writeToUiAppend(etLog, "02 select PPSE");
@@ -248,6 +249,7 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
                     }
                     return;
                 }
+                System.out.println("### analyze selectPpse: " + bytesToHex(checkResponse(responsePpse)));
 
                 writeToUiAppend(etLog, "");
                 writeToUiAppend(etLog, "04 analyze PPSE");
@@ -260,7 +262,7 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
 
                 byte[] responseOk = checkResponse(responsePpse);
                 if (responseOk != null) {
-                    System.out.println("# selectPpse response:" + bytesToHex(responseOk));
+                    System.out.println("### analyze selectPpse response:" + bytesToHex(responseOk));
 /*
 MC AAB: response:6f3c840e325041592e5359532e4444463031a52abf0c2761254f07a000000004101050104465626974204d6173746572436172648701019f0a0400010101
 6F File Control Information (FCI) Template
@@ -448,8 +450,9 @@ Voba RF # selectPpse response:6f67840e325041592e5359532e4444463031a555bf0c526119
                             return;
                         }
                         responseOk = checkResponse(responseSelectedAid);
+
                         if (responseOk != null) {
-                            System.out.println("# selectAid response:" + bytesToHex(responseOk));
+                            System.out.println("### analyze selectAid: " + bytesToHex(responseOk));
                             BerTlvs tlvsAid = parser.parse(responseOk);
                             List<BerTlv> tlvListAid = tlvsAid.getList();
                             int tlvListAidLength = tlvListAid.size();
@@ -464,7 +467,7 @@ Voba RF # selectPpse response:6f67840e325041592e5359532e4444463031a555bf0c526119
                                 // this is mainly for Visa cards
                                 byte[] pdolValue = tag9f38.getBytesValue();
                                 writeToUiAppend(etLog, "PDOL found: " + bytesToHex(pdolValue));
-                                System.out.println("pdolValue: " + bytesToHex(pdolValue));
+                                System.out.println("### analyze pdol: " + bytesToHex(pdolValue));
 /*
 Voba 6f4a8409d27600002547410100a53d50086769726f636172648701019f38099f33029f35019f40015f2d046465656ebf0c1a9f4d02190a9f6e07028000003030009f0a080001050100000000
 6F File Control Information (FCI) Template
@@ -500,7 +503,9 @@ Visa: 9f66049f02069f03069f1a0295055f2a029a039c019f3704
                                 byte[] responsePdolOk = checkResponse(responsePdol);
                                 if (responsePdolOk != null) {
                                     writeToUiAppend(etLog, "respondePdol: " + bytesToHex(responsePdolOk));
+                                    System.out.println("# selectAid response:" + bytesToHex(responseOk));
                                     System.out.println("responsePdol: " + bytesToHex(responsePdolOk));
+                                    System.out.println("### analyze responsePdol: " + bytesToHex(responsePdolOk));
                                     // now we are searching for tag 57 = Track 2 Equivalent Data, the first 16 bytes are the cc number
 
                                     // new
