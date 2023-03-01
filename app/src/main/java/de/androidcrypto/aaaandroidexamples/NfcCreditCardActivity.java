@@ -545,14 +545,32 @@ Visa: 9f66049f02069f03069f1a0295055f2a029a039c019f3704
                                     System.out.println("resultRaise: " + bytesToHex(resultRaise));
 
                                     //last thing to do was to read the record:
-
-                                    byte[] readSelectedRecord = new byte[] { 0x00, (byte) 0xb2,
-                                            0x01, (byte) 0xa4, 0x00 };
+                                    // works with Voba Maestro Girocard, HVB Maestro Girocard, norisbank Maestro Girocard, comdirect Vpay Girocard
+                                    byte[] readSelectedRecord = new byte[] { 0x00, (byte) 0xb2, (byte) 0x05, (byte) 0x0c, 0x00 };
                                     System.out.println("readSelectedRecord: " + bytesToHex(readSelectedRecord));
                                     byte[] resultRead;
                                     resultRead = nfc.transceive(readSelectedRecord);
                                     System.out.println("resultRead: " + bytesToHex(resultRead));
-
+/*
+Voba 70385f24032112315a0a6726428902046846007f5f3401025f280202809f0702ffc09f0d05fc40a480009f0e0500101800009f0f05fc40a498009000
+70 EMV Proprietary Template
+ 	5F24 Application Expiration Date
+ 	 	211231
+ 	5A Application Primary Account Number (PAN)
+ 	 	6726428902046846007F
+ 	5F34 Application Primary Account Number (PAN) Sequence Number
+ 	 	02
+ 	5F28 Issuer Country Code
+ 	 	0280
+ 	9F07 Application Usage Control
+ 	 	FFC0
+ 	9F0D Issuer Action Code – Default
+ 	 	FC40A48000
+ 	9F0E Issuer Action Code – Denial
+ 	 	0010180000
+ 	9F0F Issuer Action Code – Online
+ 	 	FC40A49800
+ */
 
 
                                 }
