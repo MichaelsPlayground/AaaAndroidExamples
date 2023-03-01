@@ -217,6 +217,7 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
                 byte[] command;
 
                 writeToUiAppend(etLog, "");
+                // just for fun
                 writeToUiAppend(etLog, "01 select PSE");
                 byte[] PSE = "1PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PSE
                 command = selectApdu(PSE);
@@ -226,13 +227,17 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
                 if (responsePseNotAllowed) {
                     writeToUiAppend(etLog, "01 selecting PSE is not allowed on card");
                 }
-                System.out.println("### analyze selectPse: " + bytesToHex(checkResponse(responsePse)));
+                byte[] responsePseOk = checkResponse(responsePse);
+                if (responsePseOk != null) {
+                    System.out.println("### analyze selectPse: " + bytesToHex(responsePseOk));
+                }
 
                 writeToUiAppend(etLog, "");
                 writeToUiAppend(etLog, "02 select PPSE");
                 byte[] PPSE = "2PAY.SYS.DDF01".getBytes(StandardCharsets.UTF_8); // PPSE
                 command = selectApdu(PPSE);
                 byte[] responsePpse = nfc.transceive(command);
+                System.out.println("02 select PPSE length " + command.length + " data: " + bytesToHex(command));
                 writeToUiAppend(etLog, "02 select PPSE response length " + responsePpse.length + " data: " + bytesToHex(responsePpse));
                 boolean responsePpseNotAllowed = responseNotAllowed(responsePpse);
                 if (responsePpseNotAllowed) {
@@ -258,11 +263,34 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
                 TagValues tv = new TagValues();
                 AidValues aidV = new AidValues();
 
-                System.out.println("get tv: " + tv.getEmvTagList());
+                //System.out.println("get tv: " + tv.getEmvTagList());
 
                 byte[] responseOk = checkResponse(responsePpse);
                 if (responseOk != null) {
                     System.out.println("### analyze selectPpse response:" + bytesToHex(responseOk));
+/*
+Visa: 6f5d8407a0000000031010a5525010564953412044454249542020202020208701029f38189f66049f02069f03069f1a0295055f2a029a039c019f37045f2d02656ebf0c1a9f5a0531082608269f0a080001050100000000bf6304df200180
+6F File Control Information (FCI) Template
+ 	84 Dedicated File (DF) Name
+ 	 	A0000000031010
+ 	A5 File Control Information (FCI) Proprietary Template
+ 	 	50 Application Label
+ 	 	 	V I S A D E B I T
+ 	 	87 Application Priority Indicator
+ 	 	 	02
+ 	 	9F38 Processing Options Data Object List (PDOL)
+ 	 	 	9F66049F02069F03069F1A0295055F2A029A039C019F3704
+ 	 	5F2D Language Preference
+ 	 	 	e n
+ 	 	BF0C File Control Information (FCI) Issuer Discretionary Data
+ 	 	 	9F5A Unknown tag
+ 	 	 	 	3108260826
+ 	 	 	9F0A Unknown tag
+ 	 	 	 	0001050100000000
+ 	 	 	BF63 Unknown tag
+ 	 	 	 	DF20 Unknown tag
+ 	 	 	 	 	80
+*/
 /*
 MC AAB: response:6f3c840e325041592e5359532e4444463031a52abf0c2761254f07a000000004101050104465626974204d6173746572436172648701019f0a0400010101
 6F File Control Information (FCI) Template
@@ -436,6 +464,7 @@ Voba RF # selectPpse response:6f67840e325041592e5359532e4444463031a555bf0c526119
                         System.out.println("analyzing aidNumber " + aidNumber + " (AID: " + bytesToHex(aidSelected) + ")");
                         command = selectApdu(aidSelected);
                         byte[] responseSelectedAid = nfc.transceive(command);
+                        System.out.println("04 select AID length " + command.length + " data: " + bytesToHex(command));
                         writeToUiAppend(etLog, "04 select AID response length " + responseSelectedAid.length + " data: " + bytesToHex(responseSelectedAid));
                         boolean responseSelectAidNotAllowed = responseNotAllowed(responseSelectedAid);
                         if (responseSelectAidNotAllowed) {
@@ -672,6 +701,7 @@ Visa PDOL: 77478202200057134921828094896752d25022013650000000000f5f3401009f10070
  	 	20700000
  */
 
+
                             } else {
                                 // this the mastercard code
                                 writeToUiAppend(etLog, "PDOL not found");
@@ -866,7 +896,8 @@ Visa: 6f5d8407a0000000031010a5525010564953412044454249542020202020208701029f3818
         }
     }
 
-    // get a tag value from response
+
+
 
     /**
      * gets the byte value of a tag from tranceive response
