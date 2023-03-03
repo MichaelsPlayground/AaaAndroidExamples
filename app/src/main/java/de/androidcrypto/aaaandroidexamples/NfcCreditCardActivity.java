@@ -41,6 +41,7 @@ import java.util.List;
 
 import de.androidcrypto.aaaandroidexamples.nfccreditcards.AidValues;
 import de.androidcrypto.aaaandroidexamples.nfccreditcards.GuessPdol;
+import de.androidcrypto.aaaandroidexamples.nfccreditcards.PdolUtil;
 import de.androidcrypto.aaaandroidexamples.nfccreditcards.TagValues;
 
 public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
@@ -166,7 +167,10 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
             // init of the service methods
             TagValues tv = new TagValues();
             AidValues aidV = new AidValues();
-            GuessPdol gp = new GuessPdol(nfc);
+            //GuessPdol gp = new GuessPdol(nfc);
+            System.out.println("***** PDOL UTIL *****");
+            PdolUtil pu = new PdolUtil(nfc);
+            System.out.println("***** PDOL UTIL *****");
 
             maxTransceiveLength = nfc.getMaxTransceiveLength();
             int timeout = nfc.getTimeout();
@@ -411,7 +415,8 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
                                     command = selectApdu(aidSelected);
                                     responseSelectedAid = nfc.transceive(command);
                                     System.out.println("selectAid again, result: " + bytesToHex(responseSelectedAid));
-                                    byte[] guessedPdolResult = gp.getPdol(guessedPdolLength);
+                                    //byte[] guessedPdolResult = gp.getPdol(guessedPdolLength);
+                                    byte[] guessedPdolResult = pu.getPdol(guessedPdolLength);
                                     if (guessedPdolResult != null) {
                                         System.out.println("guessedPdolResult: " + bytesToHex(guessedPdolResult));
                                         // read the PAN & Expiration date
