@@ -10,7 +10,7 @@ There are xx steps to read the PAN (primary account number = credit card number)
 2) **analyze select PPSE respond**: search for tag(s) 0x4F (Application Identifier (AID) - card)
 3) **select Application**: select an application by its ID (AID) found in step 2, after this step the card is released for further readings
 4) **search for tag 0x9F38 in the response from step 3** The tag 0x9F38 is the **Processing Options Data Object List (PDOL)** that we need for further processing
-5) **get the processing options**: providing PDOL-data from step 3 gives the **AFL application file list** where we can read the data
+5) **get the processing options**: providing PDOL-data from step 3 & 4 gives the **AFL application file list** where we can read the data
 6) **read the files from card**: think of a file directory and the AFL from step 4 lists all files on the card. Read each file and try 
 to find the data we want to show (PAN and expiration date)
 7) **search in each file for the tag 0x57**: tag 0x57 is the **Track 2 Equivalent Data** that has the PAN and expiration date as data fields.

@@ -16,6 +16,7 @@ public class PdolUtil {
     private final List<String> pdolList = new ArrayList<>();
     private final int maximumPdolEntries = 20;
     private boolean settingResult = setPdolEntries(maximumPdolEntries);
+    private final String pdolWithCountryCode = "80A80000238321A0000000000000000001000000000000084000000000000840070203008017337000";
 
     public PdolUtil(IsoDep nfc) {
         this.nfc = nfc;
@@ -63,6 +64,10 @@ public class PdolUtil {
         // at this point none of the predefined pdol is working
         //System.out.println("++ predefinedPdols do not work, return null ++");
         return null;
+    }
+
+    public String getPdolWithCountryCode() {
+        return pdolWithCountryCode;
     }
 
     private byte[] checkResponse(byte[] data) {
