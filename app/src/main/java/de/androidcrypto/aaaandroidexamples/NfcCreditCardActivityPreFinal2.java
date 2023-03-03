@@ -5,14 +5,9 @@ import static de.androidcrypto.aaaandroidexamples.BinaryUtils.hexToBytes;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
-import android.nfc.tech.MifareClassic;
-import android.nfc.tech.MifareUltralight;
-import android.nfc.tech.NfcA;
-import android.nfc.tech.NfcV;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
@@ -43,7 +38,7 @@ import de.androidcrypto.aaaandroidexamples.nfccreditcards.AidValues;
 import de.androidcrypto.aaaandroidexamples.nfccreditcards.GuessPdol;
 import de.androidcrypto.aaaandroidexamples.nfccreditcards.TagValues;
 
-public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
+public class NfcCreditCardActivityPreFinal2 extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
     private final String TAG = "NfcCreditCardAct";
 
@@ -83,7 +78,7 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "btn1 back to main menu");
-                Intent intent = new Intent(NfcCreditCardActivity.this, MainActivity.class);
+                Intent intent = new Intent(NfcCreditCardActivityPreFinal2.this, MainActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -109,7 +104,6 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
             aidSelectedForAnalyze = "";
             aidSelectedForAnalyzeName = "";
         });
-        playPing();
         // clear all data
         clearAllData();
 
@@ -146,16 +140,6 @@ public class NfcCreditCardActivity extends AppCompatActivity implements NfcAdapt
                 }
             }
         }
-    }
-
-    private void playPing() {
-        MediaPlayer mp = MediaPlayer.create(NfcCreditCardActivity.this, R.raw.ping);
-        mp.start();
-    }
-
-    private void playDoublePing() {
-        MediaPlayer mp = MediaPlayer.create(NfcCreditCardActivity.this, R.raw.double_ping);
-        mp.start();
     }
 
     private void readIsoDep(Tag tag) {
@@ -1171,7 +1155,6 @@ Visa: 6f5d8407a0000000031010a5525010564953412044454249542020202020208701029f3818
             }
 
         }
-        playDoublePing();
     }
 
     /**
