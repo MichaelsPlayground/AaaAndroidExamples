@@ -411,7 +411,7 @@ public class NfcCreditCardActivityPreFinal3 extends AppCompatActivity implements
                                     responseSelectedAid = nfc.transceive(command);
                                     System.out.println("selectAid again, result: " + bytesToHex(responseSelectedAid));
                                     //byte[] guessedPdolResult = gp.getPdol(guessedPdolLength);
-                                    byte[] guessedPdolResult = pu.getPdol(guessedPdolLength);
+                                    byte[] guessedPdolResult = pu.getGpo(guessedPdolLength);
                                     if (guessedPdolResult != null) {
                                         System.out.println("guessedPdolResult: " + bytesToHex(guessedPdolResult));
                                         // read the PAN & Expiration date
@@ -1183,6 +1183,7 @@ Visa: 6f5d8407a0000000031010a5525010564953412044454249542020202020208701029f3818
         String pan = "";
         String expirationDate = "";
         BerTlvParser parser = new BerTlvParser();
+
         // search for tag 0x94 = AFL
         BerTlvs tlvsGpo02 = parser.parse(getProcessingOptions);
         BerTlv tag94 = tlvsGpo02.find(new BerTag(0x94));

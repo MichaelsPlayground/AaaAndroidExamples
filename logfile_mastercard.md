@@ -4,4 +4,4 @@ The data in this document come from a real but outdated creditcard, so I don't m
 
 **MasterCard debit card from Augsburger Aktienbank**
 
-
+Expiration date format is YYMMDD

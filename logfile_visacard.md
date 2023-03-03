@@ -16,6 +16,10 @@ to find the data we want to show (PAN and expiration date)
 7) **search in each file for the tag 0x57**: tag 0x57 is the **Track 2 Equivalent Data** that has the PAN and expiration date as data fields.
 8) **get PAN and expiration date** from the content in tag 0x57 value.
 
+Expiration date format is YYMM
+
+Soundfiles: https://mobcup.net/ringtone/ping-euf272ye/download/mp3
+
 Below is a full workflow for the steps above. In most cases there are 3 parts for each step:
 - the command send to the card in hex encoding
 - the response from the card in hex encoding
