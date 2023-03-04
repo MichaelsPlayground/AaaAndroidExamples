@@ -54,10 +54,11 @@ public class OptionMenuActivity extends AppCompatActivity {
      */
     String importString = "";
     String exportString = "";
-    String stringFilename = "test.txt";
+    String stringFileName = "test.txt";
     byte[] importByte = new byte[0];
     byte[] exportByte = new byte[0];
-    String byteFilename = "test.dat";
+    String byteFileName = "test.dat";
+    String importFileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -200,7 +201,7 @@ public class OptionMenuActivity extends AppCompatActivity {
         //boolean pickerInitialUri = false;
         //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         // get filename from edittext
-        String filename = stringFilename;
+        String filename = stringFileName;
         // sanity check
         if (filename.equals("")) {
             writeToUiToast("scan a tag before writing the content to a file :-)");
@@ -270,7 +271,7 @@ public class OptionMenuActivity extends AppCompatActivity {
         //boolean pickerInitialUri = false;
         //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         // get filename from edittext
-        String filename = byteFilename;
+        String filename = byteFileName;
         // sanity check
         if (filename.equals("")) {
             writeToUiToast("scan a tag before writing the content to a file :-)");
@@ -361,6 +362,7 @@ public class OptionMenuActivity extends AppCompatActivity {
                             try {
                                 importString = readTextFromUri(getApplicationContext(), uri);
                                 etRead.setText(importString);
+                                // todo set filename
                             } catch (IOException e) {
                                 //throw new RuntimeException(e);
                                 etRead.setText("Error: " + e.getMessage());
@@ -387,14 +389,58 @@ public class OptionMenuActivity extends AppCompatActivity {
     /**
      * section OptionsMenu import binary file methods
      */
-    private byte[] readBytesFromUri(Uri uri) throws IOException {
-        if (contextSave != null) {
-            ContentResolver contentResolver = contextSave.getContentResolver();
-            String filename = queryName(contentResolver, uri);
-            writeToUiAppend(readResult, "content of file " + filename);
-            dumpFileName = filename;
-            // warning: contextSave needs to get filled
 
+    private void importBinaryFile() {
+        /*
+        if (exportString.isEmpty()) {
+            writeToUiToast("Scan a tag first before writing files :-)");
+            return;
+        }
+        */
+        readByteFromExternalSharedStorage();
+    }
+
+    private void readByteFromExternalSharedStorage() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        //boolean pickerInitialUri = false;
+        //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        selectImportBinaryFileActivityResultLauncher.launch(intent);
+    }
+
+    ActivityResultLauncher<Intent> selectImportBinaryFileActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent resultData = result.getData();
+                        // The result data contains a URI for the document or directory that
+                        // the user selected.
+                        Uri uri = null;
+                        if (resultData != null) {
+                            uri = resultData.getData();
+                            try {
+                                readBytesFromUri(getApplicationContext(), uri);
+                                //etRead.setText(importString);
+                                // todo set filename
+                            } catch (IOException e) {
+                                //throw new RuntimeException(e);
+                                etRead.setText("Error: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+            });
+    private byte[] readBytesFromUri(Context context, Uri uri) throws IOException {
+        if (context != null) {
+            ContentResolver contentResolver = context.getContentResolver();
+            String filename = queryName(contentResolver, uri);
+            importFileName = filename;
             Thread DoBasicCreateFolder = new Thread() {
                 public void run() {
                     try (InputStream inputStream = contentResolver.openInputStream(uri);
@@ -410,11 +456,12 @@ public class OptionMenuActivity extends AppCompatActivity {
                         }
                         // and then we can return your byte array.
                         //return byteBuffer.toByteArray();
-                        contentLoaded = byteBuffer.toByteArray();
+                        importByte = byteBuffer.toByteArray();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                showFileContent();
+                                // todo set filename
+                                etRead.setText(BinaryUtils.bytesToHex(importByte));
                                 //Toast.makeText(DeleteGoogleDriveFile.this, "selected file deleted", Toast.LENGTH_SHORT).show();
                             }
                         });
@@ -505,7 +552,15 @@ public class OptionMenuActivity extends AppCompatActivity {
             }
         });
 
-
+        MenuItem mImportBinaryFile = menu.findItem(R.id.action_import_binary_file);
+        mImportBinaryFile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Log.i(TAG, "mImportBinaryFile");
+                importBinaryFile();
+                return false;
+            }
+        });
 
 
         return super.onCreateOptionsMenu(menu);
