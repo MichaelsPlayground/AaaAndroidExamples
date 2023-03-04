@@ -2,12 +2,15 @@ package de.androidcrypto.aaaandroidexamples;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +30,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -380,6 +384,78 @@ public class OptionMenuActivity extends AppCompatActivity {
         return stringBuilder.toString();
     }
 
+    /**
+     * section OptionsMenu import binary file methods
+     */
+    private byte[] readBytesFromUri(Uri uri) throws IOException {
+        if (contextSave != null) {
+            ContentResolver contentResolver = contextSave.getContentResolver();
+            String filename = queryName(contentResolver, uri);
+            writeToUiAppend(readResult, "content of file " + filename);
+            dumpFileName = filename;
+            // warning: contextSave needs to get filled
+
+            Thread DoBasicCreateFolder = new Thread() {
+                public void run() {
+                    try (InputStream inputStream = contentResolver.openInputStream(uri);
+                         // this dynamically extends to take the bytes you read
+                         ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();) {
+                        // this is storage overwritten on each iteration with bytes
+                        int bufferSize = 1024;
+                        byte[] buffer = new byte[bufferSize];
+                        // we need to know how may bytes were read to write them to the byteBuffer
+                        int len = 0;
+                        while ((len = inputStream.read(buffer)) != -1) {
+                            byteBuffer.write(buffer, 0, len);
+                        }
+                        // and then we can return your byte array.
+                        //return byteBuffer.toByteArray();
+                        contentLoaded = byteBuffer.toByteArray();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showFileContent();
+                                //Toast.makeText(DeleteGoogleDriveFile.this, "selected file deleted", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                }
+            };
+            DoBasicCreateFolder.start();
+
+            /*
+            try (InputStream inputStream = contentResolver.openInputStream(uri);
+                 // this dynamically extends to take the bytes you read
+                 ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();) {
+                // this is storage overwritten on each iteration with bytes
+                int bufferSize = 1024;
+                byte[] buffer = new byte[bufferSize];
+                // we need to know how may bytes were read to write them to the byteBuffer
+                int len = 0;
+                while ((len = inputStream.read(buffer)) != -1) {
+                    byteBuffer.write(buffer, 0, len);
+                }
+                // and then we can return your byte array.
+                return byteBuffer.toByteArray();
+            }
+            */
+        }
+        return null;
+    }
+
+    private String queryName(ContentResolver resolver, Uri uri) {
+        Cursor returnCursor =
+                resolver.query(uri, null, null, null, null);
+        assert returnCursor != null;
+        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        returnCursor.moveToFirst();
+        String name = returnCursor.getString(nameIndex);
+        returnCursor.close();
+        return name;
+    }
 
     /**
      * section for OptionsMenu
