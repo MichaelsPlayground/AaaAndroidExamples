@@ -26,10 +26,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.payneteasy.tlv.BerTagFactory;
-import com.payneteasy.tlv.BerTlv;
-import com.payneteasy.tlv.BerTlvParser;
-import com.payneteasy.tlv.BerTlvs;
+
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -494,20 +491,6 @@ public class NfcActivity extends AppCompatActivity implements NfcAdapter.ReaderC
                         //System.out.println("pse: " + bytesToHex(responsePse));
                     }
                 }
-
-                if (responsePpse != null) {
-                    //final BerTlvLoggerSlf4j LOG = new BerTlvLoggerSlf4j();
-                    BerTlvParser parser = new BerTlvParser();
-                    BerTlvs tlvs = parser.parse(responsePpse, 0, responsePpse.length);
-                    List<BerTlv> tlv = tlvs.getList();
-                    for (int i = 0; i < tlv.size(); i++) {
-                        System.out.println("ppse i " + i + " " + tlv.get(i).toString());
-                    }
-                }
-
-
-
-
 
 
                 writeToUiAppend(etLog, "try to read a nPA (national ID-card Germany)");

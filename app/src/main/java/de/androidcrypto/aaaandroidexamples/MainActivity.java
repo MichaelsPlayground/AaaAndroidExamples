@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final String TAG = "MainAct";
 
-    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7;
+    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9;
     TextView tv1;
     EditText et1;
 
@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
         btn5 = findViewById(R.id.btn5);
         btn6 = findViewById(R.id.btn6);
         btn7 = findViewById(R.id.btn7);
+        btn8 = findViewById(R.id.btn8);
+        btn9 = findViewById(R.id.btn9);
         tv1 = findViewById(R.id.tv1);
         et1 = findViewById(R.id.et1);
 
@@ -96,10 +98,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "btn7 NFC CreditCard");
-                Intent intent = new Intent(MainActivity.this, NfcCreditCardActivity.class);
+                //Intent intent = new Intent(MainActivity.this, NfcCreditCardActivity.class);
+                //startActivity(intent);
+            }
+        });
+
+        btn8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn8 Option menu");
+                Intent intent = new Intent(MainActivity.this, OptionMenuActivity.class);
                 startActivity(intent);
             }
         });
+
     }
 
 
