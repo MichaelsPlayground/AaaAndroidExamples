@@ -2,6 +2,7 @@ package de.androidcrypto.aaaandroidexamples;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -25,10 +26,14 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.UUID;
 
 public class OptionMenuActivity extends AppCompatActivity {
@@ -151,15 +156,15 @@ public class OptionMenuActivity extends AppCompatActivity {
     }
 
     /**
-     * section OptionsMenu file methods
+     * section OptionsMenu mail data methods
      */
 
-    private void exportDumpMail() {
+    private void exportMail() {
         if (exportString.isEmpty()) {
             writeToUiToast("Scan a tag first before sending emails :-)");
             return;
         }
-        String subject = "Dump NFC-Tag ";
+        String subject = "Dump data";
         String body = exportString;
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
@@ -170,22 +175,16 @@ public class OptionMenuActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * section OptionsMenu export text file methods
+     */
+
     private void exportTextFile() {
         if (exportString.isEmpty()) {
             writeToUiToast("Scan a tag first before writing files :-)");
             return;
         }
-        //verifyPermissionsWriteString();
         writeStringToExternalSharedStorage();
-    }
-
-    private void exportBinaryFile() {
-        if (exportByte.length == 0) {
-            writeToUiToast("Scan a tag first before writing files :-)");
-            return;
-        }
-        //verifyPermissionsWriteString();
-        writeByteToExternalSharedStorage();
     }
 
     private void writeStringToExternalSharedStorage() {
@@ -204,10 +203,10 @@ public class OptionMenuActivity extends AppCompatActivity {
             return;
         }
         intent.putExtra(Intent.EXTRA_TITLE, filename);
-        fileSaverActivityResultLauncher.launch(intent);
+        selectTextFileActivityResultLauncher.launch(intent);
     }
 
-    ActivityResultLauncher<Intent> fileSaverActivityResultLauncher = registerForActivityResult(
+    ActivityResultLauncher<Intent> selectTextFileActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
@@ -225,7 +224,6 @@ public class OptionMenuActivity extends AppCompatActivity {
                                 // get file content from edittext
                                 String fileContent = exportString;
                                 writeTextToUri(uri, fileContent);
-                                String message = "file written to external shared storage: " + uri.toString();
                                 writeToUiToast("file written to external shared storage: " + uri.toString());
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -247,6 +245,18 @@ public class OptionMenuActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * section OptionsMenu export binary file methods
+     */
+
+    private void exportBinaryFile() {
+        if (exportByte.length == 0) {
+            writeToUiToast("Scan a tag first before writing files :-)");
+            return;
+        }
+        writeByteToExternalSharedStorage();
+    }
+
     private void writeByteToExternalSharedStorage() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -263,10 +273,10 @@ public class OptionMenuActivity extends AppCompatActivity {
             return;
         }
         intent.putExtra(Intent.EXTRA_TITLE, filename);
-        binaryFileSaverActivityResultLauncher.launch(intent);
+        selectBinaryFileActivityResultLauncher.launch(intent);
     }
 
-    ActivityResultLauncher<Intent> binaryFileSaverActivityResultLauncher = registerForActivityResult(
+    ActivityResultLauncher<Intent> selectBinaryFileActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
@@ -307,12 +317,87 @@ public class OptionMenuActivity extends AppCompatActivity {
     }
 
     /**
+     * section OptionsMenu import text file methods
+     */
+
+    private void importTextFile() {
+        /*
+        if (exportString.isEmpty()) {
+            writeToUiToast("Scan a tag first before writing files :-)");
+            return;
+        }
+        */
+        readStringFromExternalSharedStorage();
+    }
+
+    private void readStringFromExternalSharedStorage() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+        //boolean pickerInitialUri = false;
+        //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        selectImportTextFileActivityResultLauncher.launch(intent);
+    }
+
+    ActivityResultLauncher<Intent> selectImportTextFileActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent resultData = result.getData();
+                        // The result data contains a URI for the document or directory that
+                        // the user selected.
+                        Uri uri = null;
+                        if (resultData != null) {
+                            uri = resultData.getData();
+                            try {
+                                importString = readTextFromUri(getApplicationContext(), uri);
+                                etRead.setText(importString);
+                            } catch (IOException e) {
+                                //throw new RuntimeException(e);
+                                etRead.setText("Error: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+            });
+
+    public static String readTextFromUri(Context context, Uri uri) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        try (InputStream inputStream =
+                     context.getContentResolver().openInputStream(uri);
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(Objects.requireNonNull(inputStream)))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+
+    /**
      * section for OptionsMenu
      */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_option_sample_activity, menu);
+
+        MenuItem mExportMail = menu.findItem(R.id.action_export_mail);
+        mExportMail.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Log.i(TAG, "mExportMail");
+                exportMail();
+                return false;
+            }
+        });
 
         MenuItem mExportTextFile = menu.findItem(R.id.action_export_text_file);
         mExportTextFile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
@@ -334,18 +419,18 @@ public class OptionMenuActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-        MenuItem mMailDumpFile = menu.findItem(R.id.action_export_mail);
-        mMailDumpFile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        MenuItem mImportTextFile = menu.findItem(R.id.action_import_text_file);
+        mImportTextFile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                Log.i(TAG, "mMailDumpFile");
-                //mailDumpFile();
+                Log.i(TAG, "mImportTextFile");
+                importTextFile();
                 return false;
             }
         });
+
+
+
 
         return super.onCreateOptionsMenu(menu);
     }

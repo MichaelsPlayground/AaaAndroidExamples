@@ -20,4 +20,14 @@
         android:title="Export binary File"
         app:showAsAction="never"/>
 
+    <item
+        android:id="@+id/action_import_text_file"
+        android:title="Import text File"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_import_binary_file"
+        android:title="Import binary File"
+        app:showAsAction="never"/>
+
 </menu>
