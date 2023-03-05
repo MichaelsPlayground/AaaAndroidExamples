@@ -44,9 +44,9 @@ public class OptionMenuActivity extends AppCompatActivity {
 
     private final String TAG = "OptionMenu Act";
 
-    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7;
+    Button btn1, btn2, btn3;
     TextView tv1;
-    com.google.android.material.textfield.TextInputEditText etRead, etWrite;
+    com.google.android.material.textfield.TextInputEditText etRead, etReadFileName, etWrite;
 
     String uniqueId; // some random data
     /**
@@ -71,20 +71,16 @@ public class OptionMenuActivity extends AppCompatActivity {
         btn1 = findViewById(R.id.btn1);
         btn2 = findViewById(R.id.btn2);
         btn3 = findViewById(R.id.btn3);
-        btn4 = findViewById(R.id.btn4);
-        btn5 = findViewById(R.id.btn5);
-        btn6 = findViewById(R.id.btn6);
-        btn7 = findViewById(R.id.btn7);
         tv1 = findViewById(R.id.tv1);
         etWrite = findViewById(R.id.etWrite);
         etRead = findViewById(R.id.etRead);
+        etReadFileName = findViewById(R.id.etReadFileName);
 
         // random data
         uniqueId = UUID.randomUUID().toString();
         etWrite.setText(uniqueId);
         exportString = uniqueId;
         exportByte = uniqueId.getBytes(StandardCharsets.UTF_8);
-
 
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,40 +106,9 @@ public class OptionMenuActivity extends AppCompatActivity {
         btn3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn3");
-
-            }
-        });
-
-        btn4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn4");
-
-            }
-        });
-
-        btn5.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn5");
-
-            }
-        });
-
-        btn6.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn 6");
-
-            }
-        });
-
-        btn7.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn 7");
-
+                Log.i(TAG, "btn3 clearData");
+                etRead.setText("");
+                etReadFileName.setText("");
             }
         });
     }
@@ -360,9 +325,11 @@ public class OptionMenuActivity extends AppCompatActivity {
                         if (resultData != null) {
                             uri = resultData.getData();
                             try {
-                                importString = readTextFromUri(getApplicationContext(), uri);
+                                ContentResolver contentResolver = getApplicationContext().getContentResolver();
+                                importFileName = queryNameFromUri(contentResolver, uri);
+                                etReadFileName.setText(importFileName);
+                                importString = readTextFromUri(contentResolver, uri);
                                 etRead.setText(importString);
-                                // todo set filename
                             } catch (IOException e) {
                                 //throw new RuntimeException(e);
                                 etRead.setText("Error: " + e.getMessage());
@@ -372,10 +339,10 @@ public class OptionMenuActivity extends AppCompatActivity {
                 }
             });
 
-    public static String readTextFromUri(Context context, Uri uri) throws IOException {
+    public static String readTextFromUri(ContentResolver contentResolver, Uri uri) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
         try (InputStream inputStream =
-                     context.getContentResolver().openInputStream(uri);
+                     contentResolver.openInputStream(uri);
              BufferedReader reader = new BufferedReader(
                      new InputStreamReader(Objects.requireNonNull(inputStream)))) {
             String line;
@@ -425,7 +392,10 @@ public class OptionMenuActivity extends AppCompatActivity {
                         if (resultData != null) {
                             uri = resultData.getData();
                             try {
-                                readBytesFromUri(getApplicationContext(), uri);
+                                ContentResolver contentResolver = getApplicationContext().getContentResolver();
+                                importFileName = queryNameFromUri(contentResolver, uri);
+                                etReadFileName.setText(importFileName);
+                                readBytesFromUri(contentResolver, uri);
                                 //etRead.setText(importString);
                                 // todo set filename
                             } catch (IOException e) {
@@ -436,12 +406,9 @@ public class OptionMenuActivity extends AppCompatActivity {
                     }
                 }
             });
-    private byte[] readBytesFromUri(Context context, Uri uri) throws IOException {
-        if (context != null) {
-            ContentResolver contentResolver = context.getContentResolver();
-            String filename = queryName(contentResolver, uri);
-            importFileName = filename;
-            Thread DoBasicCreateFolder = new Thread() {
+    private void readBytesFromUri(ContentResolver contentResolver, Uri uri) throws IOException {
+        if (contentResolver != null) {
+            Thread DoReadFile = new Thread() {
                 public void run() {
                     try (InputStream inputStream = contentResolver.openInputStream(uri);
                          // this dynamically extends to take the bytes you read
@@ -460,9 +427,8 @@ public class OptionMenuActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                // todo set filename
+                                // filename is set previously
                                 etRead.setText(BinaryUtils.bytesToHex(importByte));
-                                //Toast.makeText(DeleteGoogleDriveFile.this, "selected file deleted", Toast.LENGTH_SHORT).show();
                             }
                         });
                     } catch (IOException e) {
@@ -471,29 +437,11 @@ public class OptionMenuActivity extends AppCompatActivity {
 
                 }
             };
-            DoBasicCreateFolder.start();
-
-            /*
-            try (InputStream inputStream = contentResolver.openInputStream(uri);
-                 // this dynamically extends to take the bytes you read
-                 ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();) {
-                // this is storage overwritten on each iteration with bytes
-                int bufferSize = 1024;
-                byte[] buffer = new byte[bufferSize];
-                // we need to know how may bytes were read to write them to the byteBuffer
-                int len = 0;
-                while ((len = inputStream.read(buffer)) != -1) {
-                    byteBuffer.write(buffer, 0, len);
-                }
-                // and then we can return your byte array.
-                return byteBuffer.toByteArray();
-            }
-            */
+            DoReadFile.start();
         }
-        return null;
     }
 
-    private String queryName(ContentResolver resolver, Uri uri) {
+    private String queryNameFromUri(ContentResolver resolver, Uri uri) {
         Cursor returnCursor =
                 resolver.query(uri, null, null, null, null);
         assert returnCursor != null;
@@ -501,6 +449,7 @@ public class OptionMenuActivity extends AppCompatActivity {
         returnCursor.moveToFirst();
         String name = returnCursor.getString(nameIndex);
         returnCursor.close();
+        System.out.println("*** queryName: " + name);
         return name;
     }
 
