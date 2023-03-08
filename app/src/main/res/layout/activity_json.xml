@@ -234,7 +234,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginRight="8dp"
                     android:layout_weight="1"
-                    android:text="clear" />
+                    android:text="write model" />
 
                 <Button
                     android:id="@+id/btn5"
@@ -242,7 +242,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
                     android:layout_weight="1"
-                    android:text="Button 5" />
+                    android:text="load model" />
             </LinearLayout>
 
             <com.google.android.material.divider.MaterialDivider
@@ -254,7 +254,58 @@
                 app:dividerInsetEnd="16dp"
                 app:dividerInsetStart="16dp" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
 
+                <Button
+                    android:id="@+id/btn6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp"
+                    android:layout_weight="1"
+                    android:text="write model GSON" />
+
+                <Button
+                    android:id="@+id/btn7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_weight="1"
+                    android:text="load model GSON" />
+            </LinearLayout>
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                app:dividerThickness="4dp"
+                app:dividerInsetEnd="16dp"
+                app:dividerInsetStart="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btn8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp"
+                    android:layout_weight="1"
+                    android:text="clear" />
+
+                <Button
+                    android:id="@+id/btn9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_weight="1"
+                    android:text="Button 9" />
+            </LinearLayout>
 
             <com.google.android.material.divider.MaterialDivider
                 android:layout_width="match_parent"
