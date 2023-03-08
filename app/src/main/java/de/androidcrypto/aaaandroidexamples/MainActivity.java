@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final String TAG = "MainAct";
 
-    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9;
+    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11;
     TextView tv1;
     EditText et1;
 
@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
         btn7 = findViewById(R.id.btn7);
         btn8 = findViewById(R.id.btn8);
         btn9 = findViewById(R.id.btn9);
+        btn10 = findViewById(R.id.btn10);
+        btn11 = findViewById(R.id.btn11);
         tv1 = findViewById(R.id.tv1);
         et1 = findViewById(R.id.et1);
 
@@ -108,6 +110,15 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.i(TAG, "btn8 Option menu");
                 Intent intent = new Intent(MainActivity.this, OptionMenuActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btn10.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "btn10 JSON menu");
+                Intent intent = new Intent(MainActivity.this, JsonActivity.class);
                 startActivity(intent);
             }
         });

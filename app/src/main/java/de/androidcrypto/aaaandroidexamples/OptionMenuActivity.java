@@ -53,12 +53,13 @@ public class OptionMenuActivity extends AppCompatActivity {
      * global variables that take the content for exporting and mailing
      */
     String importString = "";
-    String exportString = "";
-    String stringFileName = "test.txt";
     byte[] importByte = new byte[0];
-    byte[] exportByte = new byte[0];
-    String byteFileName = "test.dat";
     String importFileName;
+    String exportString = "";
+    byte[] exportByte = new byte[0];
+    String exportStringFileName = "test.txt";
+    String expportByteFileName = "test.dat";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,7 +167,7 @@ public class OptionMenuActivity extends AppCompatActivity {
         //boolean pickerInitialUri = false;
         //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         // get filename from edittext
-        String filename = stringFileName;
+        String filename = exportStringFileName;
         // sanity check
         if (filename.equals("")) {
             writeToUiToast("scan a tag before writing the content to a file :-)");
@@ -236,7 +237,7 @@ public class OptionMenuActivity extends AppCompatActivity {
         //boolean pickerInitialUri = false;
         //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         // get filename from edittext
-        String filename = byteFileName;
+        String filename = expportByteFileName;
         // sanity check
         if (filename.equals("")) {
             writeToUiToast("scan a tag before writing the content to a file :-)");

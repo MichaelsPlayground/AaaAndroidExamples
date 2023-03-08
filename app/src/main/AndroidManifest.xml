@@ -46,8 +46,13 @@
         <activity
             android:name=".OptionMenuActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".JsonActivity"
+            android:exported="false" />
     </application>
 
+    <!-- for sending an email intent -->
     <queries>
         <intent>
             <action android:name="android.intent.action.SENDTO" />
