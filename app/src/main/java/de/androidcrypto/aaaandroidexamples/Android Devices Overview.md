@@ -2,7 +2,7 @@
 
 # Samsung A51
 
-- Android 8.0.0 SDK Level 26 ? = O
+- Android 13 SDK Level 33 Tiramisu = T
 - Features: Bluetooth, Bluetooth LE, GPS, NFC, NFC-HCE, WiFi
 - RAM 3570 MB, available 923 MB, Java heap 256 MB
 - Storage: 111,3 GB, available 70,7 GB
