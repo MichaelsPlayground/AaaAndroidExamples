@@ -20,6 +20,17 @@ public class TimeUtils {
         }
     }
 
+    private static String getTimestampMillis() {
+        // O = SDK 26
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return ZonedDateTime
+                    .now(ZoneId.systemDefault())
+                    .format(DateTimeFormatter.ofPattern("uuuu.MM.dd HH:mm:ss.SSS"));
+        } else {
+            return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss:SSS").format(new Date());
+        }
+    }
+
     public static String getFormattedDateYyyy_Mm (Date date) {
         return new SimpleDateFormat("yyyy-MM").format(date);
     }
