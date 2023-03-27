@@ -1,8 +1,6 @@
 package de.androidcrypto.aaaandroidexamples;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,19 +10,24 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
-    private final String TAG = "MainAct";
+public class DialogsActivity extends AppCompatActivity {
 
-    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11, btn12, btn13;
+    private final String TAG = "DialogsAct";
+
+    Button btn1, btn2, btn3, btn4, btn5, btn6, btn7;
     TextView tv1;
     EditText et1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_dialogs);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
@@ -36,123 +39,113 @@ public class MainActivity extends AppCompatActivity {
         btn5 = findViewById(R.id.btn5);
         btn6 = findViewById(R.id.btn6);
         btn7 = findViewById(R.id.btn7);
-        btn8 = findViewById(R.id.btn8);
-        btn9 = findViewById(R.id.btn9);
-        btn10 = findViewById(R.id.btn10);
-        btn11 = findViewById(R.id.btn11);
-        btn12 = findViewById(R.id.btn12);
-        btn13 = findViewById(R.id.btn13);
         tv1 = findViewById(R.id.tv1);
         et1 = findViewById(R.id.et1);
 
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn1");
-
+                Log.i(TAG, "btn1 back to main menu");
+                Intent intent = new Intent(DialogsActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
 
         btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn2 internal storage");
-                Intent intent = new Intent(MainActivity.this, InternalStorageActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn2");
+
             }
         });
 
         btn3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn3 external storage");
-                Intent intent = new Intent(MainActivity.this, ExternalStorageActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn3");
+
             }
         });
 
         btn4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn4 shared preferences");
-                Intent intent = new Intent(MainActivity.this, SharedPreferencesActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn4");
+                // check marks
+                showCheckMarksAlertDialog();
             }
         });
 
         btn5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn5 encrypted shared preferences");
-                Intent intent = new Intent(MainActivity.this, EncryptedSharedPreferencesActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn5");
+
             }
         });
 
         btn6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn6 NFC");
-                Intent intent = new Intent(MainActivity.this, NfcActivity.class);
-                startActivity(intent);
+                Log.i(TAG, "btn 6");
+
             }
         });
 
         btn7.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(TAG, "btn7 NFC CreditCard");
-                //Intent intent = new Intent(MainActivity.this, NfcCreditCardActivity.class);
-                //startActivity(intent);
-            }
-        });
+                Log.i(TAG, "btn 7");
 
-        btn8.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn8 Option menu");
-                Intent intent = new Intent(MainActivity.this, OptionMenuActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        btn10.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn10 JSON menu");
-                Intent intent = new Intent(MainActivity.this, JsonActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        btn11.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn11");
-                //ntent intent = new Intent(MainActivity.this, JsonActivity.class);
-                //startActivity(intent);
-            }
-        });
-
-        btn12.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn12 Dialogs menu");
-                Intent intent = new Intent(MainActivity.this, DialogsActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        btn13.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "btn13");
-                //Intent intent = new Intent(MainActivity.this, JsonActivity.class);
-                //startActivity(intent);
             }
         });
     }
 
+    private void showCheckMarksAlertDialog() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(DialogsActivity.this);
+        alertDialog.setTitle("AlertDialog");
+        String[] items = {"java","android","Data Structures","HTML","CSS"};
+        boolean[] checkedItems = {false, false, false, false, false,false};
+        alertDialog.setMultiChoiceItems(items, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                switch (which) {
+                    case 0:
+                        if(isChecked)
+                            Toast.makeText(DialogsActivity.this, "Clicked on java", Toast.LENGTH_LONG).show();
+                        break;
+                    case 1:
+                        if(isChecked)
+                            Toast.makeText(DialogsActivity.this, "Clicked on android", Toast.LENGTH_LONG).show();
+                        break;
+                    case 2:
+                        if(isChecked)
+                            Toast.makeText(DialogsActivity.this, "Clicked on Data Structures", Toast.LENGTH_LONG).show();
+                        break;
+                    case 3:
+                        if(isChecked)
+                            Toast.makeText(DialogsActivity.this, "Clicked on HTML", Toast.LENGTH_LONG).show();
+                        break;
+                    case 4:
+                        if(isChecked)
+                            Toast.makeText(DialogsActivity.this, "Clicked on CSS", Toast.LENGTH_LONG).show();
+                        break;
+                }
+            }
+        });
+        // Add OK and Cancel buttons
+        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // The user clicked OK
+            }
+        });
+        alertDialog.setNegativeButton("Cancel", null);
+        AlertDialog alert = alertDialog.create();
+        alert.setCanceledOnTouchOutside(true);
+        alert.show();
+    }
 
     /**
      * section for OptionsMenu

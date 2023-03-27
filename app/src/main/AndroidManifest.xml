@@ -3,7 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- needed for NFC -->
     <uses-permission android:name="android.permission.NFC" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.VIBRATE" /> <!-- for sending an email intent -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+
+            <data android:scheme="*" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -14,7 +21,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AaaAndroidExamples"
         tools:targetApi="31">
-
+        <activity
+            android:name=".DialogsActivity"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -42,22 +51,12 @@
         <activity
             android:name=".NfcActivity"
             android:exported="false" />
-
         <activity
             android:name=".OptionMenuActivity"
             android:exported="false" />
-
         <activity
             android:name=".JsonActivity"
             android:exported="false" />
     </application>
-
-    <!-- for sending an email intent -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.SENDTO" />
-            <data android:scheme="*" />
-        </intent>
-    </queries>
 
 </manifest>
