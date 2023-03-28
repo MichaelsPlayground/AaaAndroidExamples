@@ -167,6 +167,7 @@ public class InternalFilesActivity extends AppCompatActivity {
     }
 
     private byte[] getResourceFileAsByteArray(String fileName) {
+        // https://stackoverflow.com/a/38912527/8166854
         ClassLoader classLoader = getClass().getClassLoader();
         if (classLoader != null) {
             try (InputStream is = classLoader.getResourceAsStream(fileName)) {
