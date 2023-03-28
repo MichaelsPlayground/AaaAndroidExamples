@@ -22,6 +22,9 @@
         android:theme="@style/Theme.AaaAndroidExamples"
         tools:targetApi="31">
         <activity
+            android:name=".InternalFilesActivity"
+            android:exported="false" />
+        <activity
             android:name=".DialogsActivity"
             android:exported="false" />
         <activity

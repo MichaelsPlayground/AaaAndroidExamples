@@ -1,0 +1,2 @@
+This is a test file for Internal Files "Load from Resources Folder"
+Line 2, End of File
