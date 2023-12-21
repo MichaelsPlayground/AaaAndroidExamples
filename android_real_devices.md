@@ -20,5 +20,15 @@ Features of the devices
 | Samsung Galaxy S8 |  12 MP, 4032 x 3024 px  |  8 MP, 3264 x 2448 px   | yes + BT LE | yes |  yes   | yes  |
 | Xiaomi Redmi 9    |  13 MP, 460 x 3120 px   |  5 MP, 2592 x 1936 px   | yes + BT LE | yes | **no** | yes  |
 
+Bluetooth Features
+
+
+| Device            | BLE Low Energy | High Speed PHY 2M | Long Range PHY Cod | LE Audio | 
+|-------------------|:--------------:|:-----------------:|:------------------:|:--------:|
+| Samsung A51 5F    |      yes       |        yes        |         no         |    no    |
+| Samsung A5        |      yes       |        no         |         no         |    no    |
+| Samsung Galaxy S8 |                |                   |     |     |
+| Xiaomi Redmi 9    |                |                   |     |   |
+
 
 
