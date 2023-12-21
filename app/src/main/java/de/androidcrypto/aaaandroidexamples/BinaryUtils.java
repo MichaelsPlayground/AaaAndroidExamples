@@ -4,6 +4,7 @@ import android.util.Base64;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -282,4 +283,36 @@ public class BinaryUtils {
     public static byte[] intToByteArrayV4(byte[] bytes) {
         return new BigInteger(bytes).toByteArray();
     }
+
+    /**
+     * sector for long to byte array and vice versa
+     */
+
+    // System.out.println("BIG ENDIAN");
+    //byte[] dateFeb232023TsV = longToByteArrayBigEndian(dateFeb232023.getTime() / 1000);
+    // System.out.println("LITTLE ENDIAN");
+    // little endian
+    // byte[] dateFeb232023TsVLE = longToByteArrayLittleEndian(dateFeb232023.getTime() / 1000);
+
+
+    // gives 8 bytes for a long
+    static byte[] longToByteArrayBigEndian(long value) {
+        return ByteBuffer.allocate(8).putLong(value).array();
+    }
+
+    static long byteArrayToLongBigEndian(byte[] array) {
+        return ByteBuffer.wrap(array).getLong();
+    }
+
+    static byte[] longToByteArrayLittleEndian(long value) {
+        return ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(value).array();
+        //return ByteBuffer.allocate(8).putLong(value).array();
+    }
+
+    static long byteArrayToLongLittleEndian(byte[] array) {
+        return ByteBuffer.wrap(array).order(ByteOrder.LITTLE_ENDIAN).getLong();
+        //return ByteBuffer.wrap(array).getLong();
+    }
+
+
 }
