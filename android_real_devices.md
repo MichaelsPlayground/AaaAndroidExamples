@@ -31,4 +31,15 @@ Bluetooth Features
 | Xiaomi Redmi 9    |                |                   |     |   |
 
 
+HardReset.info:
+Wie komme ich zu den Entwickleroptionen auf REDMI Note 9 Pro?
+Haben Sie sich jemals gefragt, wie Sie versteckte Funktionen in REDMI Note 9 Pro finden können? Mit Hilfe dieses Lernprogramms können Sie REDMI Entwicklereinstellungen entsperren. Lesen Sie, wie Sie Entwickleroptionen aktivieren und geheime Optionen von verwenden Android 10.
+
+Entwickleroptionen REDMI Note 9 Pro Gehen Sie zunächst zu Einstellungen.
+HardReset.info: Suchen Sie im zweiten Schritt den Abschnitt " Über Telefon ".
+HardReset.info: Drittens tippen Sie mehrmals auf die MIUI-Version , um Entwickler zu werden.
+HardReset.info: Gehen Sie nun zurück zu Einstellungen und öffnen Sie Zusätzliche Einstellungen -> Entwickleroptionen.
+HardReset.info: Tippen Sie danach auf den Umschalter.
+HardReset.info: Erfolg!
+
 
